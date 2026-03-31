@@ -59,13 +59,8 @@ export default function ApiAccess() {
             style={{ background: "#f5f0e8", fontFamily: "Courier New, monospace" }}
           >
             <p className="font-bold mb-3">REQUEST RECEIVED</p>
-            <p className="mb-1">
-              Your access request has been submitted. The archive administrator
-            </p>
-            <p className="mb-1">
-              will review your request and respond to the email address provided.
-            </p>
-            <p className="mt-3">Allow 1-3 business days for a response.</p>
+            <p className="mb-3">Your access request has been submitted. The archive administrator will review your request and respond to the email address provided.</p>
+            <p>Allow 1-3 business days for a response.</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4 max-w-lg">
@@ -109,8 +104,7 @@ export default function ApiAccess() {
                 style={{ background: "#f5f0e8", fontFamily: "Courier New, monospace" }}
               >
                 <p className="font-bold mb-3">SUBMISSION ERROR</p>
-                <p className="mb-1">Your request could not be sent. Please try again or contact the</p>
-                <p>archive administrator directly at k@burge.world</p>
+                <p>Your request could not be sent. Please try again or contact the archive administrator directly at k@burge.world</p>
               </div>
             )}
 
@@ -161,9 +155,7 @@ export default function ApiAccess() {
         <p className="font-bold mb-2">RESPONSE FORMAT</p>
         <p className="mb-1">All responses return JSON. HTTP 200 on success.</p>
         <p className="mb-1">List responses include: total, limit, offset, records[].</p>
-        <p className="mb-1">Each record includes: site_id, plaza_name, location, survey_date,</p>
-        <p className="mb-1">demolition_horizon, status, classification, environmental_metrics,</p>
-        <p className="mb-1">field_notes, permit_reference, coordinates.</p>
+        <p className="mb-1">Each record includes: site_id, plaza_name, location, survey_date, demolition_horizon, status, classification, environmental_metrics, field_notes, permit_reference, coordinates.</p>
 
         <hr className="border-[#808080] my-4" />
 
