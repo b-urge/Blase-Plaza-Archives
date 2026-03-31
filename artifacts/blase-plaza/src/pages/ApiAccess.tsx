@@ -177,8 +177,7 @@ export default function ApiAccess() {
 
         <p className="font-bold mb-2">NOTES</p>
         <p className="mb-1">Data reflects Miami-Dade County permit records and is updated daily.</p>
-        <p className="mb-1">Field assessments are documentary in nature and do not constitute</p>
-        <p className="mb-1">official municipal records.</p>
+        <p className="mb-1">Field assessments are documentary in nature and do not constitute official municipal records.</p>
         <p className="mb-1">All data is read-only. No write access is available via this API.</p>
       </div>
     </div>
