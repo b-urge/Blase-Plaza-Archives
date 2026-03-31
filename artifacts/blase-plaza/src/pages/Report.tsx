@@ -10,11 +10,11 @@ export default function Report() {
   });
 
   if (isLoading) {
-    return <div className="p-4 font-mono font-bold">LOADING FILE...</div>;
+    return <div className="p-4 font-bold">LOADING FILE...</div>;
   }
 
   if (!survey) {
-    return <div className="p-4 font-mono font-bold text-[#cc0000]">ERROR: FILE NOT FOUND</div>;
+    return <div className="p-4 font-bold text-[#cc0000]">ERROR: FILE NOT FOUND</div>;
   }
 
   return (
@@ -31,7 +31,7 @@ export default function Report() {
         </button>
       </div>
 
-      <div className="bg-[#f5f0e8] border-2 border-[#333] p-4 md:p-8 font-mono text-[13px] text-black shadow-none flex-1 overflow-auto">
+      <div className="bg-[#f5f0e8] border-2 border-[#333] p-4 md:p-8 text-[13px] text-black shadow-none flex-1 overflow-auto">
         <div className="border-b-2 border-[#333] pb-4 mb-6 text-center">
           <h1 className="text-xl font-bold tracking-wider">BLASÉ PLAZA ARCHIVES</h1>
           <p className="mt-1 font-bold">OFFICIAL FIELD REPORT</p>
@@ -70,7 +70,7 @@ export default function Report() {
             <p className="font-bold mb-3 border-b border-[#ccc] pb-2">
               SITE STATUS: {survey.status}
             </p>
-            <pre className="whitespace-pre-wrap font-mono text-[13px] font-medium leading-relaxed">
+            <pre className="whitespace-pre-wrap text-[13px] font-medium leading-relaxed" style={{ fontFamily: "inherit" }}>
               {survey.reportText}
             </pre>
           </div>
