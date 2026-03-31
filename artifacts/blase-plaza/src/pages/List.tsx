@@ -183,7 +183,7 @@ export default function ListView() {
                     className="cursor-pointer hover:bg-[#0000EE] hover:text-white group"
                     onClick={() => setLocation(`/report/${survey.id}`)}
                   >
-                    <td className="group-hover:text-white text-[#0000EE] underline whitespace-nowrap" style={{ fontFamily: "Courier New, monospace" }}>{String(index + 1).padStart(2, '0')}</td>
+                    <td className="group-hover:text-white text-[#0000EE] underline whitespace-nowrap">{String(index + 1).padStart(2, '0')}</td>
                     <td>{survey.plazaName}</td>
                     <td>{survey.location}</td>
                     <td className="whitespace-nowrap">{survey.surveyDate}</td>
