@@ -66,9 +66,14 @@ export default function Report() {
 
         <div className="mb-12">
           <h3 className="font-bold mb-3 uppercase tracking-wider">Field Agent Notes</h3>
-          <pre className="whitespace-pre-wrap font-mono text-[13px] font-medium leading-relaxed bg-[#ffffff] p-4 border border-[#999]">
-            {survey.reportText}
-          </pre>
+          <div className="bg-[#ffffff] border border-[#999] p-4">
+            <p className="font-bold mb-3 border-b border-[#ccc] pb-2">
+              SITE STATUS: {survey.status}
+            </p>
+            <pre className="whitespace-pre-wrap font-mono text-[13px] font-medium leading-relaxed">
+              {survey.reportText}
+            </pre>
+          </div>
         </div>
 
         <div className="border-t-2 border-[#333] pt-4 text-xs text-center text-gray-600 font-bold tracking-widest">
