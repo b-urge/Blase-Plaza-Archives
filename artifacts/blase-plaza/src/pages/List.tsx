@@ -85,13 +85,13 @@ export default function ListView() {
                 </tr>
               </thead>
               <tbody>
-                {surveys.map(survey => (
+                {surveys.map((survey, index) => (
                   <tr 
                     key={survey.id} 
                     className="cursor-pointer hover:bg-[#0000EE] hover:text-white group"
                     onClick={() => setLocation(`/report/${survey.id}`)}
                   >
-                    <td className="group-hover:text-white text-[#0000EE] underline">{survey.siteId}</td>
+                    <td className="group-hover:text-white text-[#0000EE] underline">{String(index + 1).padStart(2, '0')}</td>
                     <td>{survey.plazaName}</td>
                     <td>{survey.location}</td>
                     <td>{survey.surveyDate}</td>
