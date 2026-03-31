@@ -32,11 +32,17 @@ export default function About() {
       </p>
 
       <h3 className="font-bold mb-2 text-base">DATA COLLECTION METHODOLOGY</h3>
+      <p className="mb-4">
+        Field agents dispatch to slated sites to record vital metrics including parking entropy, shade coverage (artificial and natural), remaining signage density, and overall structural malaise. Photographic evidence is currently maintained in physical filing cabinets off-site; this digital terminal only reflects quantitative metrics and qualitative field notes.
+      </p>
+      <p className="mb-4">
+        Ambient acoustic surveys are conducted independently of visual field documentation. Each site receives a dedicated sound profile capturing baseline audio conditions including mechanical hum, traffic proximity, HVAC output, and occupant-generated noise. These recordings are logged as a separate data category and treated as a measurable characteristic of the site's operational state at time of survey.
+      </p>
+      <p className="mb-4">
+        For sites designated as renovation candidates, supplementary demographic data is collected at the census tract level and updated on a rolling basis. Tracked indicators include residential population change, median household income shift, and commercial tenant classification over time. This data is maintained in parallel with structural field notes to allow for longitudinal comparison between physical site transformation and surrounding population change.
+      </p>
       <p className="mb-6">
-        Field agents dispatch to slated sites to record vital metrics including parking entropy, 
-        shade coverage (artificial and natural), remaining signage density, and overall structural malaise. 
-        Photographic evidence is currently maintained in physical filing cabinets off-site; this digital terminal 
-        only reflects quantitative metrics and qualitative field notes.
+        All field data is assigned a collection date and site status at time of entry: Active, Declining, Renovation Pending, Demolition Pending, or Post-Intervention. Records for Post-Intervention sites remain in the Archive indefinitely and are not removed upon completion of demolition or renovation. The Archive considers a closed site an active data point.
       </p>
 
       <hr className="my-6 border-black" />
