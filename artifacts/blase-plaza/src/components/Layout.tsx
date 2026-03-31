@@ -8,15 +8,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen flex flex-col bg-[#c0c0c0] font-sans text-black">
       {/* @ts-expect-error marquee is deprecated but required by design */}
       <marquee className="bg-black text-[#ffffaa] font-bold py-1 border-b-2 border-white text-sm" scrollamount="5">
-        ** BLASÉ PLAZA ARCHIVES // RECORDS UPDATED DAILY // UNAUTHORIZED ACCESS PROHIBITED **
+        ** BLASÉ PLAZA ARCHIVES // RECORDS UPDATED DAILY **
       </marquee>
       
       <header className="bg-[#000080] text-white p-3 flex justify-between items-center border-b-2 border-white border-t-2 border-[#808080]">
         <div className="flex items-center gap-4">
           <div className="border-2 border-white p-1 text-xs font-mono bg-black text-white text-center w-16 h-16 flex items-center justify-center flex-col shadow-none">
-            <span className="block border-b border-white mb-1 w-full pb-1">BPA</span>
             <span className="text-[9px]">EST.</span>
-            <span className="text-[9px]">1997</span>
+            <span className="text-[9px]">2026</span>
           </div>
           <div>
             <h1 className="text-xl font-bold tracking-widest" style={{ textShadow: "1px 1px 0px #000" }}>BLASÉ PLAZA ARCHIVES</h1>
