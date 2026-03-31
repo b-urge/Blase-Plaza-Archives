@@ -24,7 +24,7 @@ export default function About() {
 
       <h3 className="font-bold mb-2 text-base">DATA COLLECTION METHODOLOGY</h3>
       <p className="mb-6">
-        Field agents dispatch weekly to slated sites to record vital metrics including parking entropy, 
+        Field agents dispatch to slated sites to record vital metrics including parking entropy, 
         shade coverage (artificial and natural), remaining signage density, and overall structural malaise. 
         Photographic evidence is currently maintained in physical filing cabinets off-site; this digital terminal 
         only reflects quantitative metrics and qualitative field notes.
