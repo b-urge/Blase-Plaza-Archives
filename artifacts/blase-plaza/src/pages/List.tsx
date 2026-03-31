@@ -75,13 +75,13 @@ export default function ListView() {
             <table className="win98-table">
               <thead>
                 <tr>
-                  <th className="cursor-pointer hover:bg-[#0000AA]" style={{ width: '52px' }} onClick={() => handleSort("siteId")}>SITE ID<SortIcon field="siteId" /></th>
-                  <th className="cursor-pointer hover:bg-[#0000AA]" style={{ width: '20%' }} onClick={() => handleSort("plazaName")}>PLAZA NAME<SortIcon field="plazaName" /></th>
-                  <th className="cursor-pointer hover:bg-[#0000AA]" style={{ width: '24%' }} onClick={() => handleSort("location")}>LOCATION<SortIcon field="location" /></th>
-                  <th className="cursor-pointer hover:bg-[#0000AA]" style={{ width: '90px' }} onClick={() => handleSort("surveyDate")}>SURVEY DATE<SortIcon field="surveyDate" /></th>
-                  <th className="cursor-pointer hover:bg-[#0000AA]" style={{ width: '90px' }} onClick={() => handleSort("demolitionHorizon")}>HORIZON<SortIcon field="demolitionHorizon" /></th>
-                  <th style={{ width: '18%' }}>CLASSIFICATION</th>
-                  <th style={{ width: '130px' }}>STATUS</th>
+                  <th className="cursor-pointer hover:bg-[#0000AA] whitespace-nowrap" onClick={() => handleSort("siteId")}>SITE ID<SortIcon field="siteId" /></th>
+                  <th className="cursor-pointer hover:bg-[#0000AA] whitespace-nowrap" onClick={() => handleSort("plazaName")}>PLAZA NAME<SortIcon field="plazaName" /></th>
+                  <th className="cursor-pointer hover:bg-[#0000AA] whitespace-nowrap" onClick={() => handleSort("location")}>LOCATION<SortIcon field="location" /></th>
+                  <th className="cursor-pointer hover:bg-[#0000AA] whitespace-nowrap" onClick={() => handleSort("surveyDate")}>SURVEY DATE<SortIcon field="surveyDate" /></th>
+                  <th className="cursor-pointer hover:bg-[#0000AA] whitespace-nowrap" onClick={() => handleSort("demolitionHorizon")}>HORIZON<SortIcon field="demolitionHorizon" /></th>
+                  <th className="whitespace-nowrap">CLASSIFICATION</th>
+                  <th className="whitespace-nowrap">STATUS</th>
                 </tr>
               </thead>
               <tbody>
@@ -91,12 +91,12 @@ export default function ListView() {
                     className="cursor-pointer hover:bg-[#0000EE] hover:text-white group"
                     onClick={() => setLocation(`/report/${survey.id}`)}
                   >
-                    <td className="group-hover:text-white text-[#0000EE] underline">{String(index + 1).padStart(2, '0')}</td>
-                    <td className="overflow-hidden whitespace-nowrap" style={{ textOverflow: 'ellipsis' }}>{survey.plazaName}</td>
-                    <td className="overflow-hidden whitespace-nowrap" style={{ textOverflow: 'ellipsis' }}>{survey.location}</td>
-                    <td>{survey.surveyDate}</td>
-                    <td>{survey.demolitionHorizon}</td>
-                    <td className="overflow-hidden whitespace-nowrap" style={{ textOverflow: 'ellipsis' }}>{survey.plazaType}</td>
+                    <td className="group-hover:text-white text-[#0000EE] underline whitespace-nowrap">{String(index + 1).padStart(2, '0')}</td>
+                    <td>{survey.plazaName}</td>
+                    <td>{survey.location}</td>
+                    <td className="whitespace-nowrap">{survey.surveyDate}</td>
+                    <td className="whitespace-nowrap">{survey.demolitionHorizon}</td>
+                    <td>{survey.plazaType}</td>
                     <td>
                       <span className="inline-flex items-center gap-1">
                         <span 
