@@ -43,7 +43,8 @@ export default function MapView() {
                     <div className="font-sans text-sm pb-1">
                       <strong className="block border-b border-[#c0c0c0] mb-1 pb-1">{survey.plazaName}</strong>
                       <div className="text-xs mb-1">LOC: {survey.location}</div>
-                      <div className="text-xs mb-2">HORIZON: {survey.demolitionHorizon}</div>
+                      <div className="text-xs mb-1">HORIZON: {survey.demolitionHorizon}</div>
+                      <div className="text-xs mb-2">STATUS: {survey.status}</div>
                       <Link href={`/report/${survey.id}`}>
                         <span className="text-[#0000EE] underline cursor-pointer inline-block text-xs font-bold">
                           [ VIEW FULL REPORT ]

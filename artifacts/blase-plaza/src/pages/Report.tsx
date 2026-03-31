@@ -45,6 +45,7 @@ export default function Report() {
             <p><strong>SURVEY DATE:</strong> {survey.surveyDate}</p>
           </div>
           <div className="space-y-1">
+            <p><strong>STATUS:</strong> {survey.status}</p>
             <p><strong>HORIZON:</strong> {survey.demolitionHorizon}</p>
             <p><strong>PLAZA TYPE:</strong> {survey.plazaType}</p>
             <p><strong>ARCH. STYLE:</strong> {survey.architecturalStyle}</p>
