@@ -75,13 +75,13 @@ export default function ListView() {
             <table className="win98-table">
               <thead>
                 <tr>
-                  <th className="cursor-pointer hover:bg-[#0000AA]" onClick={() => handleSort("siteId")}>SITE ID<SortIcon field="siteId" /></th>
+                  <th className="cursor-pointer hover:bg-[#0000AA] whitespace-nowrap" style={{ width: '60px' }} onClick={() => handleSort("siteId")}>SITE ID<SortIcon field="siteId" /></th>
                   <th className="cursor-pointer hover:bg-[#0000AA]" onClick={() => handleSort("plazaName")}>PLAZA NAME<SortIcon field="plazaName" /></th>
                   <th className="cursor-pointer hover:bg-[#0000AA]" onClick={() => handleSort("location")}>LOCATION<SortIcon field="location" /></th>
                   <th className="cursor-pointer hover:bg-[#0000AA]" onClick={() => handleSort("surveyDate")}>SURVEY DATE<SortIcon field="surveyDate" /></th>
                   <th className="cursor-pointer hover:bg-[#0000AA]" onClick={() => handleSort("demolitionHorizon")}>HORIZON<SortIcon field="demolitionHorizon" /></th>
                   <th>CLASSIFICATION</th>
-                  <th className="w-36">STATUS</th>
+                  <th style={{ width: '140px' }}>STATUS</th>
                 </tr>
               </thead>
               <tbody>
