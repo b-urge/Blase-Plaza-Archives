@@ -1,6 +1,6 @@
 export default function About() {
   return (
-    <div className="win98-window p-8 h-full max-w-3xl font-mono text-[13px] leading-relaxed">
+    <div className="win98-window p-8 h-full max-w-3xl text-[13px] leading-relaxed">
       <h2 className="text-xl font-bold mb-6 border-b-2 border-black pb-2">ABOUT BLASÉ PLAZA ARCHIVES</h2>
       
       <p className="mb-4">

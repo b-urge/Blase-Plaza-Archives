@@ -77,7 +77,6 @@ export default function ListView() {
               background: "#f5f0e8",
               border: "2px solid #333",
               padding: "28px 32px",
-              fontFamily: "Courier New, monospace",
               fontSize: "13px",
               lineHeight: "1.7",
             }}
@@ -153,7 +152,7 @@ export default function ListView() {
       <div className="mb-2 text-xs">
         <button
           onClick={() => setShowModal(true)}
-          className="text-[#0000EE] underline cursor-pointer bg-transparent border-none p-0 font-mono text-xs"
+          className="text-[#0000EE] underline cursor-pointer bg-transparent border-none p-0 text-xs"
           style={{ fontFamily: "inherit" }}
         >
           DEMOLITION HORIZON CLASSIFICATIONS

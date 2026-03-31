@@ -1,0 +1,77 @@
+Here's the rewritten prompt:
+
+---
+
+**FOLLOW-UP INSTRUCTION — FONT AUDIT AND STANDARDIZATION**
+
+Perform a full font audit across the entire app and standardize typography according to the rules below. This affects every page — MAP, LIST, FIELD AGENT NOTES, API ACCESS, ABOUT, and all navigation elements.
+
+---
+
+**THE RULE**
+
+Courier New is a specialized font for technical content only. It should not be used for general body text, descriptions, labels, or prose anywhere in the app.
+
+The heading font is defined as:
+```
+<h1 className="text-xl font-bold tracking-widest" style={{ textShadow: "1px 1px 0px #000" }}>
+```
+This is the Tailwind default sans-serif stack. Use this same font family for all body text and prose across the site.
+
+Use Courier New ONLY for:
+- Code snippets or inline code
+- Terminal or command line text
+- File names, paths, or system outputs
+- Data that needs strict character alignment (tables, logs)
+- API keys, endpoint URLs, parameter examples
+- Any text the user is expected to copy and paste exactly
+- All text inside the Field Agent Notes view — the typewritten aesthetic is intentional there and must not change
+
+Use the heading font family (Tailwind default sans-serif) for EVERYTHING else, including:
+- All body text and prose paragraphs
+- Page descriptions and introductory text
+- Navigation links
+- Labels, captions, and field names
+- Button text
+- Error and confirmation messages
+- The About page in its entirety
+- The API Access page prose sections
+- Any instructional or explanatory text anywhere on the site
+
+---
+
+**SPECIFIC FIXES**
+
+**About page:**
+Change all body text font from Courier New to the heading font family. The About page contains no code, no data, and no copy-paste content — it should read like a normal document, not a terminal.
+
+**API Access page:**
+- Prose paragraphs in the About the API section → heading font family
+- Form labels and field text → heading font family
+- Confirmation and error messages → heading font family
+- Endpoint URLs, parameter examples, code blocks, the API key display → Courier New
+- Documentation section: prose descriptions → heading font family, endpoint paths and parameter syntax → Courier New
+
+**List view:**
+- Table cell text → heading font family
+- Column headers → heading font family, bold
+- Any Site ID or document reference displayed in the table → Courier New
+
+**Map view:**
+- Sidebar text and labels → heading font family
+- Any permit numbers or document references → Courier New
+
+**Field Agent Notes view:**
+- Keep Courier New throughout — the typewritten, documentary aesthetic is intentional here and must not change under any circumstances
+
+**Navigation panel:**
+- All links → heading font family
+
+**Global rule:**
+Go through every component in the codebase. Anywhere Courier New is set as the font for text that is not code, technical data, or the Field Agent Notes view — change it to the heading font family. Do not leave any accidental Courier New on prose text anywhere.
+
+---
+
+Do not change any colors, layout, spacing, or other styling. Font family only.
+
+---

@@ -36,9 +36,9 @@ export default function Home() {
       <div className="win98-window-inset p-4 mb-6">
         <h3 className="font-bold mb-3 uppercase border-b-2 border-[#c0c0c0] pb-1">Database Statistics</h3>
         {isLoading ? (
-          <p className="font-mono text-sm">Loading statistics...</p>
+          <p className="text-sm">Loading statistics...</p>
         ) : stats ? (
-          <ul className="space-y-2 font-mono text-sm">
+          <ul className="space-y-2 text-sm">
             <li><strong>TOTAL RECORDS:</strong> {stats.total}</li>
             <li className="mt-3 pt-3 border-t border-[#c0c0c0]"><strong>BY STATUS:</strong></li>
             <li className="pl-2">Demolition Pending: {(stats as any).byStatus?.["Demolition Pending"] ?? 0}</li>
@@ -51,7 +51,7 @@ export default function Home() {
             </li>
           </ul>
         ) : (
-          <p className="font-mono text-sm text-[#cc0000]">SYSTEM ERROR: Unable to load statistics.</p>
+          <p className="text-sm text-[#cc0000]">SYSTEM ERROR: Unable to load statistics.</p>
         )}
       </div>
 

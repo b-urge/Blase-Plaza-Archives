@@ -56,7 +56,7 @@ export default function ApiAccess() {
         {state.succeeded ? (
           <div
             className="p-4 border-2 border-black text-sm leading-relaxed"
-            style={{ background: "#f5f0e8", fontFamily: "Courier New, monospace" }}
+            style={{ background: "#f5f0e8" }}
           >
             <p className="font-bold mb-3">REQUEST RECEIVED</p>
             <p className="mb-3">Your access request has been submitted. The archive administrator will review your request and respond to the email address provided.</p>
@@ -101,7 +101,7 @@ export default function ApiAccess() {
             {state.errors !== null && (
               <div
                 className="p-4 border-2 border-black text-sm leading-relaxed"
-                style={{ background: "#f5f0e8", fontFamily: "Courier New, monospace" }}
+                style={{ background: "#f5f0e8" }}
               >
                 <p className="font-bold mb-3">SUBMISSION ERROR</p>
                 <p>Your request could not be sent. Please try again or contact the archive administrator directly at k@burge.world</p>
@@ -131,23 +131,18 @@ export default function ApiAccess() {
       <hr className="border-black mb-6" />
 
       {/* Section 3 — Documentation */}
-      <div
-        className="text-sm leading-relaxed"
-        style={{ fontFamily: "Courier New, monospace" }}
-      >
-        <p className="font-bold mb-3 uppercase tracking-wide" style={{ fontFamily: "Verdana, Arial, sans-serif" }}>
-          API DOCUMENTATION
-        </p>
+      <div className="text-sm leading-relaxed">
+        <p className="font-bold mb-3 uppercase tracking-wide">API DOCUMENTATION</p>
 
         <p className="font-bold mb-2">ENDPOINTS</p>
-        <p className="mb-1">GET /api/v1/plazas</p>
+        <p className="mb-1" style={{ fontFamily: "Courier New, monospace" }}>GET /api/v1/plazas</p>
         <p className="mb-1 pl-4">Returns all plaza records. Optional query parameters:</p>
-        <p className="mb-1 pl-8">?horizon=IMMINENT|NEAR-TERM|PROJECTED|EXPIRED</p>
-        <p className="mb-1 pl-8">?classification=[plaza type]</p>
-        <p className="mb-1 pl-8">?limit=[integer, max 100]</p>
-        <p className="mb-1 pl-8">?offset=[integer, for pagination]</p>
+        <p className="mb-1 pl-8" style={{ fontFamily: "Courier New, monospace" }}>?horizon=IMMINENT|NEAR-TERM|PROJECTED|EXPIRED</p>
+        <p className="mb-1 pl-8" style={{ fontFamily: "Courier New, monospace" }}>?classification=[plaza type]</p>
+        <p className="mb-1 pl-8" style={{ fontFamily: "Courier New, monospace" }}>?limit=[integer, max 100]</p>
+        <p className="mb-1 pl-8" style={{ fontFamily: "Courier New, monospace" }}>?offset=[integer, for pagination]</p>
 
-        <p className="mt-3 mb-1">GET /api/v1/plazas/:site_id</p>
+        <p className="mt-3 mb-1" style={{ fontFamily: "Courier New, monospace" }}>GET /api/v1/plazas/:site_id</p>
         <p className="mb-1 pl-4">Returns a single plaza record by Site ID (zero-padded, e.g. "01").</p>
 
         <hr className="border-[#808080] my-4" />
