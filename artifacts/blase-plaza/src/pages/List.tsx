@@ -97,12 +97,14 @@ export default function ListView() {
                     <td>{survey.surveyDate}</td>
                     <td>{survey.demolitionHorizon}</td>
                     <td>{survey.plazaType}</td>
-                    <td className="text-center">
-                      <div 
-                        className="w-3 h-3 inline-block border border-black" 
-                        style={{ backgroundColor: STATUS_COLORS[survey.demolitionHorizon as keyof typeof STATUS_COLORS] || '#000' }}
-                        title={survey.status}
-                      ></div>
+                    <td className="text-center whitespace-nowrap">
+                      <span className="inline-flex items-center gap-1">
+                        <span 
+                          className="w-2 h-2 inline-block border border-black flex-shrink-0"
+                          style={{ backgroundColor: STATUS_COLORS[survey.demolitionHorizon as keyof typeof STATUS_COLORS] || '#000' }}
+                        ></span>
+                        {survey.status}
+                      </span>
                     </td>
                   </tr>
                 ))}

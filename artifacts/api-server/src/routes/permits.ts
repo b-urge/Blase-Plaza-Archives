@@ -180,7 +180,10 @@ router.post("/permits/seed", async (req, res) => {
           documentRef: survey.documentRef,
           latitude: geo?.lat ?? null,
           longitude: geo?.lng ?? null,
-          status: "ACTIVE",
+          status: permit.horizon === "IMMINENT" ? "Demolition Pending"
+            : permit.horizon === "NEAR-TERM" ? "Renovation Pending"
+            : permit.horizon === "PROJECTED" ? "Declining"
+            : "Post-Intervention",
           lastSyncedAt: new Date(),
           rawAddress: permit.address,
           squareFootage: permit.squareFootage ?? null,
@@ -275,7 +278,10 @@ router.post("/permits/sync", async (req, res) => {
               location: `${permit.address}, Miami-Dade County, Florida`,
               latitude: geo?.lat ?? null,
               longitude: geo?.lng ?? null,
-              status: "ACTIVE",
+              status: permit.horizon === "IMMINENT" ? "Demolition Pending"
+                : permit.horizon === "NEAR-TERM" ? "Renovation Pending"
+                : permit.horizon === "PROJECTED" ? "Declining"
+                : "Post-Intervention",
               lastSyncedAt: new Date(),
               rawAddress: permit.address,
               squareFootage: permit.squareFootage ?? null,
@@ -330,7 +336,10 @@ router.post("/permits/sync", async (req, res) => {
             location: `${address}, Miami-Dade County, Florida`,
             latitude: geo?.lat ?? null,
             longitude: geo?.lng ?? null,
-            status: "ACTIVE",
+            status: horizon === "IMMINENT" ? "Demolition Pending"
+              : horizon === "NEAR-TERM" ? "Renovation Pending"
+              : horizon === "PROJECTED" ? "Declining"
+              : "Post-Intervention",
             lastSyncedAt: new Date(),
             rawAddress: address,
           });
