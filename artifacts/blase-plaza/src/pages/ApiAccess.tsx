@@ -150,7 +150,7 @@ export default function ApiAccess() {
         <p className="font-bold mb-2">RESPONSE FORMAT</p>
         <p className="mb-1">All responses return JSON. HTTP 200 on success.</p>
         <p className="mb-1">List responses include: total, limit, offset, records[].</p>
-        <p className="mb-1">Each record includes: site_id, plaza_name, location, survey_date, demolition_horizon, status, classification, environmental_metrics, field_notes, permit_reference, coordinates.</p>
+        <p className="mb-1">Each record includes: <span style={{ fontFamily: "Courier New, monospace" }}>site_id</span>, plaza_name, location, survey_date, demolition_horizon, status, classification, environmental_metrics, field_notes, <span style={{ fontFamily: "Courier New, monospace" }}>permit_reference</span>, <span style={{ fontFamily: "Courier New, monospace" }}>coordinates</span>.</p>
 
         <hr className="border-[#808080] my-4" />
 

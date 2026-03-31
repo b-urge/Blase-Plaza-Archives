@@ -1,0 +1,35 @@
+FOLLOW-UP INSTRUCTION — FONT ASSIGNMENT BY DATA FIELD
+Audit every place in the app where plaza record fields are displayed outside of the Field Agent Notes view — including the list view table, the map sidebar, any preview panels, and the API Access page. Apply the following font rules field by field.
+
+USE COURIER NEW FOR THESE FIELDS:
+
+site_id — it is a reference code, display in Courier New everywhere it appears
+permit_reference — it is a document reference code, display in Courier New everywhere it appears
+coordinates — it is technical numerical data, display in Courier New everywhere it appears
+
+
+USE HEADING FONT FAMILY (Tailwind default sans-serif) FOR THESE FIELDS:
+
+plaza_name — heading font everywhere it appears
+location — heading font everywhere it appears
+survey_date — heading font everywhere it appears
+demolition_horizon — heading font everywhere it appears
+status — heading font everywhere it appears
+classification — heading font everywhere it appears, including both type and architectural_style subfields
+environmental_metrics — heading font everywhere it appears, including all five subfields: parking_entropy, shade_coverage, signage_density, vacancy_ratio, pedestrian_activity
+field_notes — heading font when displayed outside the Field Agent Notes view
+
+
+EXCEPTION — FIELD AGENT NOTES VIEW:
+Inside the Field Agent Notes view, every field without exception stays in Courier New. The typewritten aesthetic of that view is intentional and must not be changed. These font rules apply only to everywhere else in the app.
+
+WHERE TO APPLY THESE CHANGES:
+
+List view table — each column cell
+List view stacked mobile cards — each field label and value
+Map view pin sidebar panel — all field labels and values
+Any preview or summary panel that displays plaza record data
+API Access page — field names mentioned in the documentation section should follow the same rules: field names that are reference codes in Courier New, all others in heading font
+
+
+Do not change any colors, layout, spacing, or other styling. Font family only, applied field by field as specified above.
