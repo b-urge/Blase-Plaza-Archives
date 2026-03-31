@@ -14,15 +14,20 @@ export default function ListView() {
   const [, setLocation] = useLocation();
   const [search, setSearch] = useState("");
   const [horizon, setHorizon] = useState<GetSurveysHorizon | "">("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [sortBy, setSortBy] = useState<string>("id");
   const [sortDir, setSortDir] = useState<GetSurveysSortDir>("asc");
 
-  const { data: surveys = [], isLoading } = useGetSurveys({
+  const { data: rawSurveys = [], isLoading } = useGetSurveys({
     search: search || undefined,
     horizon: horizon ? (horizon as GetSurveysHorizon) : undefined,
     sortBy,
     sortDir
   });
+
+  const surveys = statusFilter
+    ? rawSurveys.filter(s => s.status === statusFilter)
+    : rawSurveys;
 
   const handleSort = (field: string) => {
     if (sortBy === field) {
@@ -63,6 +68,21 @@ export default function ListView() {
             <option value="NEAR-TERM">NEAR-TERM</option>
             <option value="PROJECTED">PROJECTED</option>
             <option value="EXPIRED">EXPIRED</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-bold mb-1">STATUS FILTER:</label>
+          <select 
+            className="win98-window-inset px-2 py-1 text-sm border-2 border-[#808080] border-t-[#000] border-l-[#000]"
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+          >
+            <option value="">-- ALL STATUSES --</option>
+            <option value="Active">Active</option>
+            <option value="Declining">Declining</option>
+            <option value="Renovation Pending">Renovation Pending</option>
+            <option value="Demolition Pending">Demolition Pending</option>
+            <option value="Post-Intervention">Post-Intervention</option>
           </select>
         </div>
       </div>
