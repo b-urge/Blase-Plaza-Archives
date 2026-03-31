@@ -77,6 +77,7 @@ export default function ListView() {
               background: "#f5f0e8",
               border: "2px solid #333",
               padding: "28px 32px",
+              fontFamily: "Courier New, monospace",
               fontSize: "13px",
               lineHeight: "1.7",
             }}
