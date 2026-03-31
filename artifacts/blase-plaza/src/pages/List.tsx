@@ -81,7 +81,7 @@ export default function ListView() {
                   <th className="cursor-pointer hover:bg-[#0000AA]" onClick={() => handleSort("surveyDate")}>SURVEY DATE<SortIcon field="surveyDate" /></th>
                   <th className="cursor-pointer hover:bg-[#0000AA]" onClick={() => handleSort("demolitionHorizon")}>HORIZON<SortIcon field="demolitionHorizon" /></th>
                   <th>CLASSIFICATION</th>
-                  <th>STATUS</th>
+                  <th className="w-36">STATUS</th>
                 </tr>
               </thead>
               <tbody>
