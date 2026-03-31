@@ -15,7 +15,7 @@ export default function MapView() {
   return (
     <div className="h-full flex flex-col">
       <div className="mb-2 font-bold">[ INTERACTIVE SITE MAP — MIAMI-DADE COUNTY ]</div>
-      <div className="flex-1 flex gap-4 min-h-[600px]">
+      <div className="flex-1 flex gap-4 min-h-[400px] md:min-h-[600px]">
         <div className="flex-1 win98-window-inset border-2 border-[#808080] relative z-0 p-1 bg-white">
           <div className="w-full h-full border-2 border-[#808080] border-t-[#000] border-l-[#000] overflow-hidden">
             <MapContainer 
@@ -57,7 +57,7 @@ export default function MapView() {
             </MapContainer>
           </div>
           
-          <div className="absolute bottom-6 left-6 z-[400] win98-window p-2 text-xs">
+          <div className="absolute bottom-4 left-4 md:bottom-6 md:left-6 z-[400] win98-window p-1 md:p-2 text-xs">
             <div className="font-bold mb-2 border-b-2 border-[#808080] pb-1">MAP LEGEND</div>
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2"><div className="w-3 h-3 bg-[#cc0000] border border-black"></div> IMMINENT</div>

@@ -55,7 +55,7 @@ export default function Home() {
         )}
       </div>
 
-      <div className="flex gap-4 mb-6">
+      <div className="flex flex-wrap gap-4 mb-6">
         <Link href="/map">
           <span className="win98-button">[ VIEW MAP ]</span>
         </Link>
@@ -70,7 +70,7 @@ export default function Home() {
         <p className="text-sm mb-1 font-bold">SYSTEM MAINTENANCE</p>
         <p className="text-xs mb-3">Only use these functions for manual data synchronization and initialization.</p>
         
-        <div className="flex gap-4">
+        <div className="flex flex-wrap gap-4">
           <button 
             className="win98-button text-xs" 
             onClick={() => syncMutation.mutate()}

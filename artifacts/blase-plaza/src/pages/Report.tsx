@@ -19,7 +19,7 @@ export default function Report() {
 
   return (
     <div className="max-w-4xl mx-auto flex flex-col h-full">
-      <div className="flex justify-between mb-4">
+      <div className="flex flex-col sm:flex-row justify-between gap-2 mb-4">
         <Link href="/list">
           <span className="win98-button">[ ← BACK TO LIST ]</span>
         </Link>
@@ -31,13 +31,13 @@ export default function Report() {
         </button>
       </div>
 
-      <div className="bg-[#f5f0e8] border-2 border-[#333] p-8 font-mono text-[13px] text-black shadow-none flex-1 overflow-auto">
+      <div className="bg-[#f5f0e8] border-2 border-[#333] p-4 md:p-8 font-mono text-[13px] text-black shadow-none flex-1 overflow-auto">
         <div className="border-b-2 border-[#333] pb-4 mb-6 text-center">
           <h1 className="text-xl font-bold tracking-wider">BLASÉ PLAZA ARCHIVES</h1>
           <p className="mt-1 font-bold">OFFICIAL FIELD REPORT</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-8 mb-6 border-b-2 border-[#333] pb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 mb-6 border-b-2 border-[#333] pb-6">
           <div className="space-y-1">
             <p><strong>SITE ID:</strong> {survey.siteId}</p>
             <p><strong>NAME:</strong> {survey.plazaName}</p>
@@ -55,7 +55,7 @@ export default function Report() {
 
         <div className="mb-6 border-b-2 border-[#333] pb-6">
           <h3 className="font-bold mb-3 uppercase tracking-wider">Metrical Assessment</h3>
-          <div className="grid grid-cols-2 gap-3 bg-[#e8e0d5] p-4 border border-[#999]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[#e8e0d5] p-4 border border-[#999]">
             <p><strong>PARKING ENTROPY:</strong> {survey.parkingEntropy}</p>
             <p><strong>SHADE COVERAGE:</strong> {survey.shadeCoverage}</p>
             <p><strong>SIGNAGE DENSITY:</strong> {survey.signageDensity}</p>

@@ -33,7 +33,7 @@ export default function ApiAccess() {
         </p>
 
         <div
-          className="text-sm p-3 border border-[#808080] bg-[#f0ede8] mb-3"
+          className="text-sm p-3 border border-[#808080] bg-[#f0ede8] mb-3 overflow-x-auto"
           style={{ fontFamily: "Courier New, monospace" }}
         >
           <p className="mb-1">Base URL: {apiBase}</p>

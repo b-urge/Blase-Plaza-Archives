@@ -1,0 +1,71 @@
+Here's the prompt:
+
+FOLLOW-UP INSTRUCTION — MOBILE RESPONSIVE FIXES
+The app currently looks correct on desktop but is broken on mobile — elements are disproportionate, text is misaligned, and the layout does not adapt correctly to small screens. Perform a full mobile responsiveness audit and fix the entire app for mobile without changing anything about the desktop layout.
+
+GENERAL RULES
+
+Desktop layout must remain completely unchanged
+All mobile fixes should be applied using responsive CSS or Tailwind breakpoint prefixes (sm:, md:) so they only activate on small screens
+Target mobile screen widths from 320px to 768px
+Do not use a separate mobile codebase — use a single responsive layout throughout
+
+
+SPECIFIC FIXES BY SECTION
+Overall layout:
+
+On mobile, the left sidebar navigation panel should collapse — it should not appear as a side column
+Replace the left sidebar with a horizontal navigation bar at the top of the page on mobile, or a hamburger menu icon that expands a dropdown nav when tapped
+The main content area should take up the full screen width on mobile with appropriate padding on left and right
+
+Header bar:
+
+The header title BLASÉ PLAZA ARCHIVES should scale down in font size on mobile so it fits on one line without overflowing
+Any seal or badge graphic in the header should scale down proportionally or be hidden on very small screens if it causes layout issues
+The marquee banner should remain but text size should be appropriate for mobile
+
+Map view:
+
+The map should be full width on mobile
+The sidebar panel that appears when clicking a pin should appear as a bottom sheet or full-width panel below the map on mobile — not as a side panel that compresses the map
+The map legend should remain visible but scale down if needed
+
+List view:
+
+The table should be horizontally scrollable on mobile — wrap it in a container with overflow-x: auto so columns do not get crushed
+Alternatively, on very small screens, collapse the table into stacked cards — one card per plaza record showing the most important fields: SITE ID, PLAZA NAME, HORIZON, and STATUS
+The SEARCH RECORDS input and HORIZON filter dropdown should stack vertically on mobile, not sit side by side if that causes overflow
+The DEMOLITION HORIZON CLASSIFICATIONS modal should be full width on mobile with scroll enabled
+
+Field Agent Notes view:
+
+The field agent notes container should be full width on mobile with comfortable left and right padding
+Font size should remain readable — no smaller than 12px on mobile
+The PRINT / EXPORT PDF and BACK TO LIST buttons should stack vertically on mobile if they do not fit side by side
+
+API Access page:
+
+All prose text should reflow naturally at mobile widths — no horizontal scrolling on text
+Code blocks and endpoint examples should be horizontally scrollable on mobile rather than forcing the page to widen
+The request form fields should be full width on mobile
+The confirmation and error message boxes should be full width on mobile
+
+About page:
+
+Text should reflow naturally at mobile widths
+No horizontal overflow
+
+Navigation:
+
+All navigation links must be tappable on mobile — minimum tap target size of 44x44px
+No link text should overflow its container or get cut off on mobile
+
+
+TESTING BASELINE
+After making changes, the app should display correctly at these common mobile widths:
+
+375px (iPhone SE / standard iPhone)
+390px (iPhone 14)
+360px (standard Android)
+
+Do not change any desktop styles, colors, fonts, or layout. Mobile fixes only.

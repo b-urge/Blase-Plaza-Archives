@@ -107,12 +107,12 @@ export default function ListView() {
         </div>
       )}
 
-      <div className="flex gap-6 mb-4 items-end bg-[#d4d0c8] p-3 border-2 border-[#808080] border-t-[#fff] border-l-[#fff]">
+      <div className="flex flex-col md:flex-row md:gap-6 md:items-end gap-3 mb-4 bg-[#d4d0c8] p-3 border-2 border-[#808080] border-t-[#fff] border-l-[#fff]">
         <div>
           <label className="block text-xs font-bold mb-1">SEARCH RECORDS:</label>
           <input
             type="text"
-            className="win98-window-inset px-2 py-1 text-sm w-64 border-2 border-[#808080] border-t-[#000] border-l-[#000]"
+            className="win98-window-inset px-2 py-1 text-sm w-full md:w-64 border-2 border-[#808080] border-t-[#000] border-l-[#000]"
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Enter search term..."
@@ -121,7 +121,7 @@ export default function ListView() {
         <div>
           <label className="block text-xs font-bold mb-1">HORIZON FILTER:</label>
           <select
-            className="win98-window-inset px-2 py-1 text-sm border-2 border-[#808080] border-t-[#000] border-l-[#000]"
+            className="win98-window-inset px-2 py-1 text-sm w-full md:w-auto border-2 border-[#808080] border-t-[#000] border-l-[#000]"
             value={horizon}
             onChange={e => setHorizon(e.target.value as GetSurveysHorizon | "")}
           >
@@ -135,7 +135,7 @@ export default function ListView() {
         <div>
           <label className="block text-xs font-bold mb-1">STATUS FILTER:</label>
           <select
-            className="win98-window-inset px-2 py-1 text-sm border-2 border-[#808080] border-t-[#000] border-l-[#000]"
+            className="win98-window-inset px-2 py-1 text-sm w-full md:w-auto border-2 border-[#808080] border-t-[#000] border-l-[#000]"
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
           >
@@ -160,7 +160,7 @@ export default function ListView() {
       </div>
 
       <div className="flex-1 overflow-auto win98-window-inset bg-white p-1">
-        <div className="border-2 border-[#808080] border-t-[#000] border-l-[#000] h-full overflow-auto">
+        <div className="border-2 border-[#808080] border-t-[#000] border-l-[#000] h-full overflow-x-auto">
           {isLoading ? (
             <div className="p-4 text-sm font-bold">LOADING RECORDS...</div>
           ) : (
