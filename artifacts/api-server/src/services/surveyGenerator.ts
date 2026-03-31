@@ -97,7 +97,6 @@ Pedestrian Activity: ${randomMetric()}
 Output EXACTLY the following survey format, filling in all bracketed fields. Do not alter the structure. Use • characters for bullet points, never markdown lists:
 
 BLASÉ PLAZA ARCHIVES
-Miami-Dade County Field Survey
 
 SITE ID: ${siteId}
 PLAZA NAME: [derive from address, business name, or neighborhood — a plausible local name]
