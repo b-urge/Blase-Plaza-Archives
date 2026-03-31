@@ -140,6 +140,72 @@ async function locationExists(location: string): Promise<boolean> {
   return rows.length > 0;
 }
 
+export async function seedIfEmpty(): Promise<void> {
+  const existing = await db.select({ id: surveysTable.id }).from(surveysTable).limit(1);
+  if (existing.length > 0) {
+    logger.info("Database already has records, skipping auto-seed");
+    return;
+  }
+
+  logger.info("Database is empty — running auto-seed with sample permits");
+  let processed = 0;
+  let errors = 0;
+  let siteNum = await getNextSiteNum();
+
+  for (const permit of SAMPLE_PERMITS) {
+    try {
+      const fullLocation = `${permit.address}, Miami-Dade County, Florida`;
+      const exists = await locationExists(permit.address);
+      if (exists) {
+        logger.info({ address: permit.address }, "Skipping duplicate address");
+        continue;
+      }
+
+      logger.info({ address: permit.address }, "Auto-seeding survey for permit");
+      const survey = await generateSurvey(permit, siteNum);
+      const geo = await geocodeAddress(permit.address);
+
+      await db.insert(surveysTable).values({
+        siteId: survey.siteId,
+        plazaName: survey.plazaName,
+        location: fullLocation,
+        surveyDate: survey.surveyDate,
+        demolitionHorizon: survey.demolitionHorizon,
+        plazaType: survey.plazaType,
+        architecturalStyle: survey.architecturalStyle,
+        parkingEntropy: survey.parkingEntropy,
+        shadeCoverage: survey.shadeCoverage,
+        signageDensity: survey.signageDensity,
+        vacancyRatio: survey.vacancyRatio,
+        pedestrianActivity: survey.pedestrianActivity,
+        reportText: survey.reportText,
+        permitNo: survey.permitNo,
+        permitType: survey.permitType,
+        permitIssueDate: survey.permitIssueDate,
+        documentRef: survey.documentRef,
+        latitude: geo?.lat ?? null,
+        longitude: geo?.lng ?? null,
+        status: permit.horizon === "IMMINENT" ? "Demolition Pending"
+          : permit.horizon === "NEAR-TERM" ? "Renovation Pending"
+          : permit.horizon === "PROJECTED" ? "Declining"
+          : "Post-Intervention",
+        lastSyncedAt: new Date(),
+        rawAddress: permit.address,
+        squareFootage: permit.squareFootage ?? null,
+        zoningCode: permit.zoningCode ?? null,
+      });
+
+      siteNum++;
+      processed++;
+    } catch (err) {
+      logger.error({ err, address: permit.address }, "Auto-seed: failed to generate/insert survey");
+      errors++;
+    }
+  }
+
+  logger.info({ processed, errors }, "Auto-seed complete");
+}
+
 router.post("/permits/seed", async (req, res) => {
   try {
     let processed = 0;
