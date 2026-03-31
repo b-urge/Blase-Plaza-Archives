@@ -13,10 +13,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
       
       <header className="bg-[#000080] text-white p-3 flex justify-between items-center border-b-2 border-white border-t-2 border-[#808080]">
         <div className="flex items-center gap-4">
-          <div className="border-2 border-white p-1 text-xs font-mono bg-black text-white text-center w-16 h-16 flex items-center justify-center flex-col shadow-none">
-            <span className="text-[9px]">EST.</span>
-            <span className="text-[9px]">2026</span>
-          </div>
           <div>
             <h1 className="text-xl font-bold tracking-widest" style={{ textShadow: "1px 1px 0px #000" }}>BLASÉ PLAZA ARCHIVES</h1>
             <p className="text-sm text-[#ffffaa] uppercase tracking-widest">Miami-Dade County</p>

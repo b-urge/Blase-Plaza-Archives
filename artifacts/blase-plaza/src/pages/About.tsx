@@ -4,9 +4,8 @@ export default function About() {
       <h2 className="text-xl font-bold mb-6 border-b-2 border-black pb-2">ABOUT BLASÉ PLAZA ARCHIVES</h2>
       
       <p className="mb-4">
-        <strong>ESTABLISHED:</strong> 1997<br />
-        <strong>JURISDICTION:</strong> Miami-Dade County<br />
-        <strong>DEPARTMENT:</strong> Office of Unincorporated Commercial Redevelopment
+        <strong>ESTABLISHED:</strong> 2026<br />
+        <strong>JURISDICTION:</strong> Miami-Dade County
       </p>
 
       <hr className="my-6 border-black" />
@@ -31,17 +30,10 @@ export default function About() {
         only reflects quantitative metrics and qualitative field notes.
       </p>
 
-      <h3 className="font-bold mb-2 text-base">ACCESS RESTRICTIONS</h3>
-      <div className="bg-black text-[#ffffaa] p-4 mb-6 border-2 border-red-600 font-bold text-center">
-        UNAUTHORIZED ACCESS OR DISTRIBUTION OF THESE RECORDS IS STRICTLY PROHIBITED.<br/>
-        VIOLATORS WILL BE PROSECUTED UNDER COUNTY ORDINANCE 4A-1995.
-      </div>
-
       <hr className="my-6 border-black" />
       
       <div className="text-center text-xs text-gray-700 font-bold">
-        <p>SYSTEM ADMIN: R. HERNANDEZ</p>
-        <p>LAST MAINTENANCE CYCLE: 04/12/2001</p>
+        <p>SYSTEM ADMIN: K.BURGE</p>
       </div>
     </div>
   );
