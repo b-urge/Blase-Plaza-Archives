@@ -1,0 +1,70 @@
+Here's the corrected follow-up prompt:
+
+---
+
+**FOLLOW-UP INSTRUCTION — DEMOLITION HORIZON CLASSIFICATIONS MODAL**
+
+On the List View page, add a plain text link directly above the records table that reads:
+
+```
+DEMOLITION HORIZON CLASSIFICATIONS
+```
+
+Style it as a standard hyperlink (`#0000EE`, underlined) — not a button. When clicked, it should NOT navigate to a new page or open a new tab. Instead, it should display an inline modal overlay (a text box that appears on top of the current page) containing the following text exactly as written. Do not reformat, summarize, or alter the text in any way.
+
+---
+
+**Modal behavior:**
+- Triggered by clicking the link — no page navigation
+- Appears centered on screen as an overlay box
+- Background behind the modal dims slightly (semi-transparent dark overlay)
+- The modal itself has: white or off-white (`#f5f0e8`) background, a visible 2px border, Courier New font throughout, 13–14px, generous padding
+- In the top-right corner of the modal box: a plain `X` character styled as a clickable close button — no icons, no SVG, just the letter X in a slightly larger font, cursor pointer
+- Clicking the `X` or clicking outside the modal closes it
+- No animations — it should appear and disappear instantly, no fade or slide
+- The modal should be scrollable if the text exceeds the viewport height on smaller screens
+
+---
+
+**Modal title and body text — use exactly this text, character for character:**
+
+```
+DEMOLITION HORIZON CLASSIFICATIONS
+
+Each catalogued structure is assigned a demolition horizon based on the status 
+of active permits, confirmed redevelopment agreements, and field-assessed site 
+conditions at the time of survey. Horizon classifications are not predictive in 
+the strict sense — they reflect the documentary record as it exists, not 
+projections of future municipal action.
+
+IMMINENT — A demolition permit has been filed and approved, or demolition 
+activity has been confirmed as actively underway at the time of the survey. 
+These sites are in the final phase of their operational lifespan. Documentation 
+priority is highest.
+
+NEAR-TERM — Active building or redevelopment permits indicate that significant 
+structural intervention is planned within the foreseeable future. The site may 
+still be partially occupied or operational. Field surveys at this stage capture 
+the transition period between function and replacement.
+
+PROJECTED — The site shows material indicators of decline — elevated vacancy, 
+deferred maintenance, reduced signage density — consistent with properties under 
+development pressure, but no permit activity has been confirmed. Classification 
+reflects observed conditions, not scheduled action.
+
+EXPIRED — Demolition or transformation is complete. The archive retains the 
+pre-intervention record for longitudinal reference.
+
+Horizon classifications are subject to revision as permit status changes. Sites 
+may move between categories across survey cycles.
+```
+
+---
+
+**Styling rules for the modal — consistent with the overall app aesthetic:**
+- The modal should look like a government information panel, not a modern dialog box
+- No rounded corners, no drop shadow, no smooth animations
+- Title `DEMOLITION HORIZON CLASSIFICATIONS` in bold Verdana or Arial, all caps, with an `<hr>` beneath it
+- Body text in Courier New
+- Each horizon term (`IMMINENT`, `NEAR-TERM`, `PROJECTED`, `EXPIRED`) in bold to stand out from body text
+- The `X` close button in the top-right should be styled consistently with the app's other buttons: beveled grey, `background: #d4d0c8`, `border: 2px outset #ffffff`
