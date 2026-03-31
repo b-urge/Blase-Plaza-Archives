@@ -15,8 +15,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col bg-[#c0c0c0] font-sans text-black">
       <div className="bg-black text-[#ffffaa] font-bold py-1 border-b-2 border-white text-xs md:text-sm overflow-hidden whitespace-nowrap">
-        <span style={{ display: "inline-block", animation: "marquee-scroll 14s linear infinite" }}>
-          ** BLASÉ PLAZA ARCHIVES //&nbsp;&nbsp;RECORDS UPDATED DAILY **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;** BLASÉ PLAZA ARCHIVES //&nbsp;&nbsp;RECORDS UPDATED DAILY **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <span style={{ display: "inline-block", animation: "marquee-scroll 18s linear infinite" }}>
+          ** BLASÉ PLAZA ARCHIVES //&nbsp;&nbsp;RECORDS UPDATED DAILY **
+          <span style={{ display: "inline-block", minWidth: "100vw" }} />
+          ** BLASÉ PLAZA ARCHIVES //&nbsp;&nbsp;RECORDS UPDATED DAILY **
+          <span style={{ display: "inline-block", minWidth: "100vw" }} />
         </span>
       </div>
       
