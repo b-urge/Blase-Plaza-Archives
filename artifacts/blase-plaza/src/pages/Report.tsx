@@ -71,7 +71,7 @@ export default function Report() {
         </div>
 
         <div className="border-t-2 border-[#333] pt-4 text-xs text-center text-gray-600 font-bold tracking-widest">
-          REF: {survey.documentRef} // SITE: {survey.siteId} // MIAMI-DADE COUNTY // NOT FOR PUBLIC DISTRIBUTION
+          REF: {survey.documentRef} // SITE: {survey.siteId} // MIAMI-DADE COUNTY
         </div>
       </div>
     </div>
