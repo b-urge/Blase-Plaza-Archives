@@ -3,12 +3,6 @@ import { useGetSurveys } from "@workspace/api-client-react";
 import type { GetSurveysHorizon, GetSurveysSortDir } from "@workspace/api-client-react";
 import { Link, useLocation } from "wouter";
 
-const STATUS_COLORS = {
-  "IMMINENT": "#cc0000",
-  "NEAR-TERM": "#cc6600",
-  "PROJECTED": "#ccaa00",
-  "EXPIRED": "#666666"
-} as const;
 
 export default function ListView() {
   const [, setLocation] = useLocation();
@@ -117,15 +111,7 @@ export default function ListView() {
                     <td className="whitespace-nowrap">{survey.surveyDate}</td>
                     <td className="whitespace-nowrap">{survey.demolitionHorizon}</td>
                     <td>{survey.plazaType}</td>
-                    <td>
-                      <span className="inline-flex items-center gap-1">
-                        <span 
-                          className="w-2 h-2 inline-block border border-black flex-shrink-0"
-                          style={{ backgroundColor: STATUS_COLORS[survey.demolitionHorizon as keyof typeof STATUS_COLORS] || '#000' }}
-                        ></span>
-                        {survey.status}
-                      </span>
-                    </td>
+                    <td>{survey.status}</td>
                   </tr>
                 ))}
                 {surveys.length === 0 && (
