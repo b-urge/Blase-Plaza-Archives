@@ -25,10 +25,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="win98-window p-3">
             <p className="font-bold text-sm mb-3 pb-1 border-b-2 border-[#808080]">NAVIGATION</p>
             <ul className="flex flex-col gap-2 text-sm">
-              <li><Link href="/"><span className={`cursor-pointer ${location === '/' ? 'font-bold' : ''}`}>[ HOME ]</span></Link></li>
-              <li><Link href="/map"><span className={`cursor-pointer ${location === '/map' ? 'font-bold' : ''}`}>[ MAP ]</span></Link></li>
-              <li><Link href="/list"><span className={`cursor-pointer ${location === '/list' ? 'font-bold' : ''}`}>[ LIST VIEW ]</span></Link></li>
-              <li><Link href="/about"><span className={`cursor-pointer ${location === '/about' ? 'font-bold' : ''}`}>[ ABOUT ]</span></Link></li>
+              <li><Link href="/"><span className={`cursor-pointer whitespace-nowrap ${location === '/' ? 'font-bold' : ''}`}>[ HOME ]</span></Link></li>
+              <li><Link href="/map"><span className={`cursor-pointer whitespace-nowrap ${location === '/map' ? 'font-bold' : ''}`}>[ MAP ]</span></Link></li>
+              <li><Link href="/list"><span className={`cursor-pointer whitespace-nowrap ${location === '/list' ? 'font-bold' : ''}`}>[ LIST VIEW ]</span></Link></li>
+              <li><Link href="/about"><span className={`cursor-pointer whitespace-nowrap ${location === '/about' ? 'font-bold' : ''}`}>[ ABOUT ]</span></Link></li>
             </ul>
           </div>
           
