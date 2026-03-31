@@ -7,35 +7,40 @@ const router: IRouter = Router();
 
 router.get("/surveys/stats", async (req, res) => {
   try {
-    const totals = await db
-      .select({
+    const [totals, statusTotals, lastUpdated] = await Promise.all([
+      db.select({
         demolitionHorizon: surveysTable.demolitionHorizon,
         count: sql<number>`cast(count(*) as int)`,
-      })
-      .from(surveysTable)
-      .groupBy(surveysTable.demolitionHorizon);
-
-    const lastUpdated = await db
-      .select({ lastSyncedAt: surveysTable.lastSyncedAt })
-      .from(surveysTable)
-      .orderBy(desc(surveysTable.lastSyncedAt))
-      .limit(1);
+      }).from(surveysTable).groupBy(surveysTable.demolitionHorizon),
+      db.select({
+        status: surveysTable.status,
+        count: sql<number>`cast(count(*) as int)`,
+      }).from(surveysTable).groupBy(surveysTable.status),
+      db.select({ lastSyncedAt: surveysTable.lastSyncedAt })
+        .from(surveysTable)
+        .orderBy(desc(surveysTable.lastSyncedAt))
+        .limit(1),
+    ]);
 
     const byHorizon: Record<string, number> = {
-      IMMINENT: 0,
-      "NEAR-TERM": 0,
-      PROJECTED: 0,
-      EXPIRED: 0,
+      IMMINENT: 0, "NEAR-TERM": 0, PROJECTED: 0, EXPIRED: 0,
+    };
+    const byStatus: Record<string, number> = {
+      "Active": 0, "Declining": 0, "Renovation Pending": 0, "Demolition Pending": 0, "Post-Intervention": 0,
     };
     let total = 0;
     for (const row of totals) {
       byHorizon[row.demolitionHorizon] = (byHorizon[row.demolitionHorizon] ?? 0) + row.count;
       total += row.count;
     }
+    for (const row of statusTotals) {
+      byStatus[row.status] = (byStatus[row.status] ?? 0) + row.count;
+    }
 
     res.json({
       total,
       byHorizon,
+      byStatus,
       lastUpdated: lastUpdated[0]?.lastSyncedAt?.toISOString() ?? null,
     });
   } catch (err) {

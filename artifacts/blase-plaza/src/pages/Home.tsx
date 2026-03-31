@@ -40,10 +40,12 @@ export default function Home() {
         ) : stats ? (
           <ul className="space-y-2 font-mono text-sm">
             <li><strong>TOTAL RECORDS:</strong> {stats.total}</li>
-            <li><strong>IMMINENT DEMOLITIONS:</strong> {stats.byHorizon.IMMINENT}</li>
-            <li><strong>NEAR-TERM:</strong> {stats.byHorizon["NEAR-TERM"]}</li>
-            <li><strong>PROJECTED:</strong> {stats.byHorizon.PROJECTED}</li>
-            <li><strong>EXPIRED (DEMOLISHED):</strong> {stats.byHorizon.EXPIRED}</li>
+            <li className="mt-3 pt-3 border-t border-[#c0c0c0]"><strong>BY STATUS:</strong></li>
+            <li className="pl-2">Demolition Pending: {(stats as any).byStatus?.["Demolition Pending"] ?? 0}</li>
+            <li className="pl-2">Renovation Pending: {(stats as any).byStatus?.["Renovation Pending"] ?? 0}</li>
+            <li className="pl-2">Declining: {(stats as any).byStatus?.["Declining"] ?? 0}</li>
+            <li className="pl-2">Active: {(stats as any).byStatus?.["Active"] ?? 0}</li>
+            <li className="pl-2">Post-Intervention: {(stats as any).byStatus?.["Post-Intervention"] ?? 0}</li>
             <li className="mt-4 pt-4 border-t-2 border-[#c0c0c0] text-[#666]">
               Last Updated: {stats.lastUpdated ? new Date(stats.lastUpdated).toLocaleString() : 'N/A'}
             </li>
