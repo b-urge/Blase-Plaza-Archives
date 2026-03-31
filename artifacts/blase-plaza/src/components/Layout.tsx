@@ -32,15 +32,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </ul>
           </div>
           
-          <div className="win98-window p-3 text-xs">
-            <p className="font-bold border-b-2 border-[#808080] mb-2 pb-1">SYSTEM STATUS</p>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-3 h-3 bg-green-500 border border-black"></div>
-              <span className="font-bold">ONLINE</span>
-            </div>
-            <p>USER: GUEST</p>
-            <p>LEVEL: 1</p>
-          </div>
         </aside>
 
         <main className="flex-1 bg-[#c0c0c0] min-w-0">
