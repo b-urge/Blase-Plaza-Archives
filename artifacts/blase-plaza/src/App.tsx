@@ -6,6 +6,7 @@ import MapView from "./pages/Map";
 import ListView from "./pages/List";
 import Report from "./pages/Report";
 import About from "./pages/About";
+import ApiAccess from "./pages/ApiAccess";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
@@ -19,6 +20,7 @@ function Router() {
         <Route path="/list" component={ListView} />
         <Route path="/report/:id" component={Report} />
         <Route path="/about" component={About} />
+        <Route path="/api-access" component={ApiAccess} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

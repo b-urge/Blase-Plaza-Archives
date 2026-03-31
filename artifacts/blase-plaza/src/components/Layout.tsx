@@ -29,6 +29,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <li><Link href="/map"><span className={`cursor-pointer whitespace-nowrap ${location === '/map' ? 'font-bold' : ''}`}>[ MAP ]</span></Link></li>
               <li><Link href="/list"><span className={`cursor-pointer whitespace-nowrap ${location === '/list' ? 'font-bold' : ''}`}>[ LIST VIEW ]</span></Link></li>
               <li><Link href="/about"><span className={`cursor-pointer whitespace-nowrap ${location === '/about' ? 'font-bold' : ''}`}>[ ABOUT ]</span></Link></li>
+              <li><Link href="/api-access"><span className={`cursor-pointer whitespace-nowrap ${location === '/api-access' ? 'font-bold' : ''}`}>[ API ACCESS ]</span></Link></li>
             </ul>
           </div>
           

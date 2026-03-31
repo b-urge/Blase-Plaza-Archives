@@ -1,0 +1,251 @@
+Here's the prompt to paste into Replit:
+
+---
+
+**FOLLOW-UP INSTRUCTION — API ACCESS FOR PLAZA DATA**
+
+Add a publicly accessible API endpoint to the app that allows external users to pull Blasé Plaza Archives survey data programmatically. Access requires an API key. Build the full key management system as described below.
+
+---
+
+**API ENDPOINTS**
+
+Expose the following read-only endpoints:
+
+```
+GET /api/v1/plazas
+```
+Returns all plaza survey records in JSON format.
+
+```
+GET /api/v1/plazas/:site_id
+```
+Returns a single plaza record by Site ID.
+
+```
+GET /api/v1/plazas?horizon=IMMINENT
+```
+Filters results by demolition horizon. Accepted values: `IMMINENT`, `NEAR-TERM`, `PROJECTED`, `EXPIRED`.
+
+```
+GET /api/v1/plazas?classification=Subtropical+Retail+Cluster
+```
+Filters by plaza classification type.
+
+Each response returns JSON in this structure:
+
+```json
+{
+  "site_id": "01",
+  "plaza_name": "Bird Road Plaza",
+  "location": "8300 SW 8th St, Miami-Dade County, Florida",
+  "survey_date": "March 2026",
+  "demolition_horizon": "IMMINENT",
+  "classification": {
+    "type": "Subtropical Retail Cluster",
+    "architectural_style": "Mediterranean Revival Strip"
+  },
+  "environmental_metrics": {
+    "parking_entropy": "High",
+    "shade_coverage": "Low",
+    "signage_density": "Moderate",
+    "vacancy_ratio": "Low",
+    "pedestrian_activity": "Moderate"
+  },
+  "commercial_species": {
+    "dominant": ["Nail Salon", "Discount Pharmacy", "Beauty Supply Store"],
+    "secondary": ["Tax Preparation Office", "Cellular Repair", "Takeout Restaurant"]
+  },
+  "field_notes": "[full field notes paragraph]",
+  "permit_reference": {
+    "permit_no": "[permit number]",
+    "permit_type": "DEMOLITION",
+    "issue_date": "[date]",
+    "document_ref": "BPA-2026-01-XXXX"
+  }
+}
+```
+
+---
+
+**API KEY SYSTEM**
+
+Build a simple API key generation and validation system stored in Supabase.
+
+**Supabase table — `api_keys`:**
+```
+id            uuid, primary key
+key           text, unique — a randomly generated 32-character alphanumeric string
+label         text — a name the user gives their key (e.g. "My Research Project")
+email         text — contact email of the requester
+created_at    timestamp
+last_used_at  timestamp
+is_active     boolean, default true
+request_count integer, default 0
+```
+
+**Key format:**
+```
+BPA-XXXXXXXXXXXXXXXXXXXXXXXXXXXX
+```
+Prefixed with `BPA-` followed by 28 random alphanumeric characters. Example:
+```
+BPA-k7mN2pQr9xLvT4wYcD8sJhA3nF6b
+```
+
+**Authentication:**
+All API requests must include the key in the request header:
+```
+X-BPA-API-Key: BPA-k7mN2pQr9xLvT4wYcD8sJhA3nF6b
+```
+If the key is missing, invalid, or inactive, return:
+```json
+{
+  "error": "UNAUTHORIZED",
+  "message": "A valid API key is required. Request access at [app URL]/api-access"
+}
+```
+with HTTP status `401`.
+
+On every successful authenticated request, update `last_used_at` and increment `request_count` in the Supabase table.
+
+---
+
+**API ACCESS REQUEST PAGE**
+
+Add a new page at `/api-access` accessible from the left navigation panel as `[ API ACCESS ]`.
+
+The page should be styled identically to the rest of the app — late 1990s government aesthetic, Verdana body text, Courier New for code blocks, grey background, navy header bar, `<hr>` dividers, beveled buttons.
+
+The page contains two sections:
+
+**Section 1 — About the API**
+
+Display this text exactly:
+
+```
+BLASÉ PLAZA ARCHIVES — DATA ACCESS API
+Miami-Dade County Field Survey Database
+
+This API provides programmatic read-only access to the Blasé Plaza 
+Archives survey database. All records reflect permit data sourced from 
+Miami-Dade County open data systems and AI-generated field assessments 
+based on documentary evidence available at time of survey.
+
+Access is free. An API key is required for all requests.
+
+Base URL: [app URL]/api/v1/
+
+Authentication: Include your key in the request header:
+X-BPA-API-Key: YOUR-KEY-HERE
+
+Rate limit: 100 requests per day per key.
+
+Data is updated daily. Records reflect permit status as of the most 
+recent sync.
+```
+
+**Section 2 — Request an API Key**
+
+A plain HTML form with three fields:
+
+```
+YOUR NAME:        [text input]
+EMAIL ADDRESS:    [text input]  
+INTENDED USE:     [textarea — brief description]
+```
+
+And a submit button styled as a classic beveled HTML button labeled:
+```
+[ REQUEST ACCESS KEY ]
+```
+
+On submit:
+- Validate that all fields are filled
+- Generate a new `BPA-` prefixed API key
+- Store the record in the Supabase `api_keys` table with `is_active = true`
+- Do NOT send an email — simply display the generated key on screen in a styled confirmation box
+
+Confirmation box text:
+```
+ACCESS GRANTED
+
+Your API key has been generated. Store it securely — it will not be 
+displayed again.
+
+YOUR KEY:
+BPA-XXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Include this key in all requests as a header:
+X-BPA-API-Key: BPA-XXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Rate limit: 100 requests per day.
+Base URL: [app URL]/api/v1/
+
+Questions or issues: contact the archive administrator.
+```
+
+Style the confirmation box with: `#f5f0e8` background, 2px solid border, Courier New font, consistent with the report card aesthetic.
+
+---
+
+**RATE LIMITING**
+
+Enforce a limit of 100 requests per day per API key. Track request counts in the `api_keys` Supabase table. If a key exceeds 100 requests in a 24-hour window, return:
+
+```json
+{
+  "error": "RATE_LIMIT_EXCEEDED",
+  "message": "Daily request limit reached. Resets at midnight UTC."
+}
+```
+with HTTP status `429`.
+
+---
+
+**DOCUMENTATION PAGE**
+
+Add a plain documentation block below the request form on `/api-access` with the following sections, styled as a text document in Courier New with `<hr>` dividers between sections:
+
+```
+ENDPOINTS
+
+GET /api/v1/plazas
+Returns all plaza records. Optional query parameters:
+  ?horizon=IMMINENT|NEAR-TERM|PROJECTED|EXPIRED
+  ?classification=[plaza type]
+  ?limit=[integer, max 100]
+  ?offset=[integer, for pagination]
+
+GET /api/v1/plazas/:site_id
+Returns a single plaza record by Site ID (zero-padded, e.g. "01").
+
+RESPONSE FORMAT
+All responses return JSON. HTTP 200 on success.
+See above for full response schema.
+
+ERROR CODES
+401 — Missing or invalid API key
+429 — Daily rate limit exceeded
+404 — Record not found
+500 — Internal server error
+
+NOTES
+Data reflects Miami-Dade County permit records and is updated daily.
+AI-generated field assessments are documentary in nature and do not 
+constitute official municipal records.
+All data is read-only. No write access is available via this API.
+```
+
+---
+
+**IMPORTANT DETAILS**
+
+- All API routes must validate the key before returning any data
+- Keys are generated server-side only — never client-side
+- Store keys in Supabase, never in environment variables or code
+- The `/api-access` page link appears in the left navigation panel as `[ API ACCESS ]`
+- No admin dashboard needed — key management is handled directly in Supabase
+- The API and the key request form should work immediately after deployment with no additional configuration
+
+---
