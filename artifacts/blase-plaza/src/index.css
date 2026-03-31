@@ -1,0 +1,157 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: #c0c0c0;
+  --color-foreground: #000000;
+  --color-border: #808080;
+  --color-input: #ffffff;
+  --color-ring: #000000;
+
+  --color-card: #c0c0c0;
+  --color-card-foreground: #000000;
+  --color-card-border: #ffffff;
+
+  --color-popover: #c0c0c0;
+  --color-popover-foreground: #000000;
+  --color-popover-border: #808080;
+
+  --color-primary: #000080;
+  --color-primary-foreground: #ffffff;
+  --color-primary-border: #000000;
+
+  --color-secondary: #d4d0c8;
+  --color-secondary-foreground: #000000;
+  --color-secondary-border: #ffffff;
+
+  --color-muted: #808080;
+  --color-muted-foreground: #c0c0c0;
+  --color-muted-border: #ffffff;
+
+  --color-accent: #000080;
+  --color-accent-foreground: #ffffff;
+  --color-accent-border: #ffffff;
+
+  --color-destructive: #cc0000;
+  --color-destructive-foreground: #ffffff;
+  --color-destructive-border: #ffffff;
+
+  --font-sans: Verdana, Arial, sans-serif;
+  --font-serif: Times New Roman, serif;
+  --font-mono: 'Courier New', Courier, monospace;
+
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+}
+
+:root {
+  --background: #c0c0c0;
+  --foreground: #000000;
+  --border: #808080;
+  --input: #ffffff;
+  --ring: #000000;
+  --radius: 0;
+}
+
+@layer base {
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .win98-button {
+    background: #d4d0c8;
+    border-top: 2px solid #ffffff;
+    border-left: 2px solid #ffffff;
+    border-right: 2px solid #808080;
+    border-bottom: 2px solid #808080;
+    color: black;
+    cursor: pointer;
+    padding: 4px 8px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .win98-button:active {
+    border-top: 2px solid #808080;
+    border-left: 2px solid #808080;
+    border-right: 2px solid #ffffff;
+    border-bottom: 2px solid #ffffff;
+    padding: 5px 7px 3px 9px;
+  }
+
+  .win98-button:disabled {
+    color: #808080;
+    cursor: not-allowed;
+  }
+
+  .win98-window {
+    background: #c0c0c0;
+    border-top: 2px solid #ffffff;
+    border-left: 2px solid #ffffff;
+    border-right: 2px solid #808080;
+    border-bottom: 2px solid #808080;
+  }
+
+  .win98-window-inset {
+    background: #ffffff;
+    border-top: 2px solid #808080;
+    border-left: 2px solid #808080;
+    border-right: 2px solid #ffffff;
+    border-bottom: 2px solid #ffffff;
+  }
+
+  a {
+    color: #0000EE;
+    text-decoration: underline;
+  }
+
+  a:visited {
+    color: #551A8B;
+  }
+
+  a:hover {
+    cursor: pointer;
+  }
+
+  hr {
+    border: none;
+    border-top: 2px solid #808080;
+    border-bottom: 2px solid #ffffff;
+    margin: 16px 0;
+  }
+
+  .win98-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .win98-table th,
+  .win98-table td {
+    border: 1px solid #999;
+    padding: 6px;
+    font-size: 13px;
+  }
+
+  .win98-table th {
+    background-color: #000080;
+    color: white;
+    text-align: left;
+    font-weight: normal;
+  }
+
+  .win98-table tr:hover td {
+    background-color: #0000EE;
+    color: white;
+  }
+}

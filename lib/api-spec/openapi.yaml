@@ -1,15 +1,18 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Blasé Plaza Archives API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: surveys
+    description: Survey operations
+  - name: permits
+    description: Permit data operations
 paths:
   /healthz:
     get:
@@ -24,6 +27,99 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /surveys:
+    get:
+      operationId: getSurveys
+      tags: [surveys]
+      summary: Get all survey entries
+      parameters:
+        - name: horizon
+          in: query
+          schema:
+            type: string
+            enum: [IMMINENT, NEAR-TERM, PROJECTED, EXPIRED]
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+        - name: sortDir
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+      responses:
+        "200":
+          description: List of survey entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Survey"
+  /surveys/{id}:
+    get:
+      operationId: getSurveyById
+      tags: [surveys]
+      summary: Get survey by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Survey entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Survey"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /surveys/stats:
+    get:
+      operationId: getSurveyStats
+      tags: [surveys]
+      summary: Get summary statistics
+      responses:
+        "200":
+          description: Stats summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SurveyStats"
+  /permits/sync:
+    post:
+      operationId: syncPermits
+      tags: [permits]
+      summary: Trigger permit data sync from Miami-Dade APIs
+      responses:
+        "200":
+          description: Sync result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncResult"
+  /permits/seed:
+    post:
+      operationId: seedSampleData
+      tags: [permits]
+      summary: Seed sample survey data using Claude AI
+      responses:
+        "200":
+          description: Seed result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncResult"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +129,128 @@ components:
           type: string
       required:
         - status
-
+    Survey:
+      type: object
+      properties:
+        id:
+          type: integer
+        siteId:
+          type: string
+        plazaName:
+          type: string
+        location:
+          type: string
+        surveyDate:
+          type: string
+        demolitionHorizon:
+          type: string
+          enum: [IMMINENT, NEAR-TERM, PROJECTED, EXPIRED]
+        plazaType:
+          type: string
+        architecturalStyle:
+          type: string
+        parkingEntropy:
+          type: string
+        shadeCoverage:
+          type: string
+        signageDensity:
+          type: string
+        vacancyRatio:
+          type: string
+        pedestrianActivity:
+          type: string
+        reportText:
+          type: string
+        permitNo:
+          type: string
+        permitType:
+          type: string
+        permitIssueDate:
+          type: string
+        documentRef:
+          type: string
+        latitude:
+          type: number
+          nullable: true
+        longitude:
+          type: number
+          nullable: true
+        status:
+          type: string
+        createdAt:
+          type: string
+        lastSyncedAt:
+          type: string
+          nullable: true
+      required:
+        - id
+        - siteId
+        - plazaName
+        - location
+        - surveyDate
+        - demolitionHorizon
+        - plazaType
+        - architecturalStyle
+        - parkingEntropy
+        - shadeCoverage
+        - signageDensity
+        - vacancyRatio
+        - pedestrianActivity
+        - reportText
+        - permitNo
+        - permitType
+        - permitIssueDate
+        - documentRef
+        - status
+        - createdAt
+    SurveyStats:
+      type: object
+      properties:
+        total:
+          type: integer
+        byHorizon:
+          type: object
+          properties:
+            IMMINENT:
+              type: integer
+            NEAR-TERM:
+              type: integer
+            PROJECTED:
+              type: integer
+            EXPIRED:
+              type: integer
+          required:
+            - IMMINENT
+            - NEAR-TERM
+            - PROJECTED
+            - EXPIRED
+        lastUpdated:
+          type: string
+          nullable: true
+      required:
+        - total
+        - byHorizon
+        - lastUpdated
+    SyncResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        processed:
+          type: integer
+        errors:
+          type: integer
+      required:
+        - success
+        - message
+        - processed
+        - errors
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error

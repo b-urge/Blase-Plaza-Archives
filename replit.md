@@ -1,8 +1,8 @@
-# Workspace
+# Blasé Plaza Archives
 
 ## Overview
 
-pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
+A full-stack web application that documents commercial plazas in Miami-Dade County scheduled for demolition or major renovation. Styled as a deliberate 1990s county government website aesthetic (Windows 98 grey, dark navy headers, beveled buttons, Courier New typewriter reports).
 
 ## Stack
 
@@ -14,83 +14,63 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **Database**: PostgreSQL + Drizzle ORM
 - **Validation**: Zod (`zod/v4`), `drizzle-zod`
 - **API codegen**: Orval (from OpenAPI spec)
-- **Build**: esbuild (CJS bundle)
+- **Build**: esbuild (ESM bundle)
+- **AI**: Anthropic Claude (via Replit AI Integrations) — `claude-sonnet-4-6`
+- **Map**: Leaflet.js + react-leaflet v5 RC
+- **Geocoding**: OpenStreetMap Nominatim
 
 ## Structure
 
 ```text
 artifacts-monorepo/
-├── artifacts/              # Deployable applications
-│   └── api-server/         # Express API server
-├── lib/                    # Shared libraries
+├── artifacts/
+│   ├── api-server/         # Express API server (routes: surveys, permits)
+│   └── blase-plaza/        # React + Vite frontend (retro 1990s aesthetic)
+├── lib/
 │   ├── api-spec/           # OpenAPI spec + Orval codegen config
 │   ├── api-client-react/   # Generated React Query hooks
 │   ├── api-zod/            # Generated Zod schemas from OpenAPI
-│   └── db/                 # Drizzle ORM schema + DB connection
-├── scripts/                # Utility scripts (single workspace package)
-│   └── src/                # Individual .ts scripts, run via `pnpm --filter @workspace/scripts run <script>`
-├── pnpm-workspace.yaml     # pnpm workspace (artifacts/*, lib/*, lib/integrations/*, scripts)
-├── tsconfig.base.json      # Shared TS options (composite, bundler resolution, es2022)
-├── tsconfig.json           # Root TS project references
-└── package.json            # Root package with hoisted devDeps
+│   ├── db/                 # Drizzle ORM schema + DB connection
+│   └── integrations-anthropic-ai/  # Anthropic AI client + batch utilities
+├── scripts/                # Utility scripts
+└── pnpm-workspace.yaml     # pnpm workspace
 ```
 
-## TypeScript & Composite Projects
+## Features
 
-Every package extends `tsconfig.base.json` which sets `composite: true`. The root `tsconfig.json` lists all packages as project references. This means:
+- **Map View** (`/map`): Leaflet.js interactive map of Miami-Dade with colored pins by demolition horizon (Red=IMMINENT, Amber=NEAR-TERM, Yellow=PROJECTED, Grey=EXPIRED)
+- **List View** (`/list`): Sortable HTML-style table with search/filter controls
+- **Report Card View** (`/report/:id`): Full typewritten survey report in Courier New with government form styling
+- **About** (`/about`): Static archival description page
+- **Home** (`/`): Stats dashboard + database initialization button
 
-- **Always typecheck from the root** — run `pnpm run typecheck` (which runs `tsc --build --emitDeclarationOnly`). This builds the full dependency graph so that cross-package imports resolve correctly. Running `tsc` inside a single package will fail if its dependencies haven't been built yet.
-- **`emitDeclarationOnly`** — we only emit `.d.ts` files during typecheck; actual JS bundling is handled by esbuild/tsx/vite...etc, not `tsc`.
-- **Project references** — when package A depends on package B, A's `tsconfig.json` must list B in its `references` array. `tsc --build` uses this to determine build order and skip up-to-date packages.
+## Data Sources
 
-## Root Scripts
+- Miami-Dade Open Data (Socrata): `https://opendata.miamidade.gov/resource/rbng-6mha.json`
+- Fallback: 6 pre-defined sample addresses from Miami-Dade commercial corridors
+- Geocoding: OpenStreetMap Nominatim
 
-- `pnpm run build` — runs `typecheck` first, then recursively runs `build` in all packages that define it
-- `pnpm run typecheck` — runs `tsc --build --emitDeclarationOnly` using project references
+## AI Survey Generation
 
-## Packages
+Each permit record generates a full structured survey via Claude `claude-sonnet-4-6`, including:
+- Plaza classification and architectural style
+- Environmental metrics (parking entropy, shade coverage, etc.)
+- Commercial species observed (likely business types)
+- Field notes in neutral bureaucratic tone
 
-### `artifacts/api-server` (`@workspace/api-server`)
+## Database Schema
 
-Express 5 API server. Routes live in `src/routes/` and use `@workspace/api-zod` for request and response validation and `@workspace/db` for persistence.
+**`surveys` table**: siteId, plazaName, location, surveyDate, demolitionHorizon, plazaType, architecturalStyle, all environmental metrics, reportText (full Claude output), permit metadata, lat/lng, status, timestamps
 
-- Entry: `src/index.ts` — reads `PORT`, starts Express
-- App setup: `src/app.ts` — mounts CORS, JSON/urlencoded parsing, routes at `/api`
-- Routes: `src/routes/index.ts` mounts sub-routers; `src/routes/health.ts` exposes `GET /health` (full path: `/api/health`)
-- Depends on: `@workspace/db`, `@workspace/api-zod`
-- `pnpm --filter @workspace/api-server run dev` — run the dev server
-- `pnpm --filter @workspace/api-server run build` — production esbuild bundle (`dist/index.cjs`)
-- Build bundles an allowlist of deps (express, cors, pg, drizzle-orm, zod, etc.) and externalizes the rest
+## API Routes
 
-### `lib/db` (`@workspace/db`)
+- `GET /api/surveys` — list surveys (filter: horizon, search; sort: any column)
+- `GET /api/surveys/stats` — totals by horizon
+- `GET /api/surveys/:id` — single survey
+- `POST /api/permits/seed` — seed 6 sample surveys using Claude
+- `POST /api/permits/sync` — sync from Miami-Dade API (falls back to seed if API unreachable)
+- `GET /api/healthz` — health check
 
-Database layer using Drizzle ORM with PostgreSQL. Exports a Drizzle client instance and schema models.
+## First-Run Setup
 
-- `src/index.ts` — creates a `Pool` + Drizzle instance, exports schema
-- `src/schema/index.ts` — barrel re-export of all models
-- `src/schema/<modelname>.ts` — table definitions with `drizzle-zod` insert schemas (no models definitions exist right now)
-- `drizzle.config.ts` — Drizzle Kit config (requires `DATABASE_URL`, automatically provided by Replit)
-- Exports: `.` (pool, db, schema), `./schema` (schema only)
-
-Production migrations are handled by Replit when publishing. In development, we just use `pnpm --filter @workspace/db run push`, and we fallback to `pnpm --filter @workspace/db run push-force`.
-
-### `lib/api-spec` (`@workspace/api-spec`)
-
-Owns the OpenAPI 3.1 spec (`openapi.yaml`) and the Orval config (`orval.config.ts`). Running codegen produces output into two sibling packages:
-
-1. `lib/api-client-react/src/generated/` — React Query hooks + fetch client
-2. `lib/api-zod/src/generated/` — Zod schemas
-
-Run codegen: `pnpm --filter @workspace/api-spec run codegen`
-
-### `lib/api-zod` (`@workspace/api-zod`)
-
-Generated Zod schemas from the OpenAPI spec (e.g. `HealthCheckResponse`). Used by `api-server` for response validation.
-
-### `lib/api-client-react` (`@workspace/api-client-react`)
-
-Generated React Query hooks and fetch client from the OpenAPI spec (e.g. `useHealthCheck`, `healthCheck`).
-
-### `scripts` (`@workspace/scripts`)
-
-Utility scripts package. Each script is a `.ts` file in `src/` with a corresponding npm script in `package.json`. Run scripts via `pnpm --filter @workspace/scripts run <script>`. Scripts can import any workspace package (e.g., `@workspace/db`) by adding it as a dependency in `scripts/package.json`.
+Click the "[ INITIALIZE DATABASE RECORDS ]" button on the home page to generate AI surveys for all 6 sample locations. This calls Claude API for each address.

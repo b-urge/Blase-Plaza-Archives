@@ -1,0 +1,239 @@
+Here's the full rewritten prompt:
+
+---
+
+**Blasé Plaza Archives — REPLIT BUILD PROMPT**
+
+Build a full-stack web application called **Blasé Plaza Archives**. The app pulls real permit and planning data from Miami-Dade County, identifies commercial plazas scheduled for demolition or major renovation within the next 1–5 years, and formats each one as a formal field survey report.
+
+---
+
+**DATA SOURCES**
+
+Pull from the following Miami-Dade public APIs. All are free and require no authentication for basic queries.
+
+**1. Demolition Permits — Miami-Dade Open Data (Socrata)**
+```
+https://opendata.miamidade.gov/resource/rbng-6mha.json
+```
+Filter for:
+- `permit_type = 'DEMOLITION'`
+- Occupancy types: `MERCANTILE`, `BUSINESS`, `RETAIL`
+- Issue date within the last 5 years OR expiration date in the future
+
+**2. Building Permits for Major Renovation**
+```
+https://opendata.miamidade.gov/resource/rbng-6mha.json
+```
+Filter for:
+- `permit_type = 'BUILDING'`
+- `work_description` contains keywords: `DEMOLISH`, `TOTAL DEMOLITION`, `RENOVATION`, `REDEVELOPMENT`, `REBUILD`
+- Occupancy types: `MERCANTILE`, `BUSINESS`, `RETAIL`
+- Issue date within the past 2 years
+
+**3. Miami-Dade GIS Parcel Data**
+```
+https://gisws.miamidade.gov/arcgis/rest/services/MDC_Landuse/MapServer/0/query
+```
+Use this to enrich permit records with parcel size, land use classification, and zoning. Query by address or parcel ID from the permit record.
+
+**Geocoding:** Use the Miami-Dade GIS geocoder to convert addresses to lat/lng for map pins:
+```
+https://gisws.miamidade.gov/GisAddress/GisAddressService.svc/rest/findAddressCandidates
+```
+Or fall back to the free OpenStreetMap Nominatim geocoder:
+```
+https://nominatim.openstreetmap.org/search?q=[ADDRESS]&format=json&limit=1
+```
+
+Refresh all data once daily and cache results in Supabase. Each unique commercial property with an active permit = one survey entry.
+
+---
+
+**TIMELINE CLASSIFICATION**
+
+Each plaza entry should be classified by demolition/renovation horizon based on permit data:
+
+- **IMMINENT (0–1 year):** Active demolition permit issued, not yet expired
+- **NEAR-TERM (1–3 years):** Building permit for demolition/redevelopment issued, under review, or recently approved
+- **PROJECTED (3–5 years):** Renovation permit filed, or parcel zoned for redevelopment with active permit activity
+
+Display this classification prominently on each report card and map pin.
+
+---
+
+**AI SURVEY GENERATION**
+
+For each permit record, call the Anthropic Claude API (`claude-sonnet-4-20250514`) with the raw data (address, parcel type, square footage, issue date, permit description, zoning) and generate a structured survey entry in this exact format. Store the output as plain text in Supabase.
+
+```
+BLASÉ PLAZA ARCHIVES
+Miami-Dade County Field Survey
+
+SITE ID: [auto-increment, zero-padded to 2 digits]
+PLAZA NAME: [derive from address, business name, or neighborhood]
+LOCATION: [full address], Miami-Dade County, Florida
+SURVEY DATE: [month + year of permit issue date]
+DEMOLITION HORIZON: [IMMINENT / NEAR-TERM / PROJECTED]
+
+PLAZA CLASSIFICATION
+Type: [one of: Subtropical Retail Cluster / Arterial Strip Complex / Parking-Forward Commercial Node / Corner Mercantile Unit]
+Architectural Style: [one of: Mediterranean Revival Strip / Concrete Modernist Block / Stucco Utilitarian / Mid-Century Commercial / Generic Post-1990 Retail]
+
+ENVIRONMENTAL METRICS
+Parking Entropy: [Low / Moderate / High]
+Shade Coverage: [Low / Moderate / High]
+Signage Density: [Low / Moderate / High]
+Vacancy Ratio: [Low / Moderate / High]
+Pedestrian Activity: [Low / Moderate / High]
+
+COMMERCIAL SPECIES OBSERVED
+Dominant Species
+• [2-3 business types likely present based on neighborhood and plaza type]
+
+Secondary Species
+• [2-3 additional business types]
+
+FIELD NOTES
+[One paragraph, 3-5 sentences. Neutral, observational, bureaucratic tone. Describe the physical structure, parking situation, signage, and commercial character based on address, square footage, zoning, and Miami-Dade neighborhood context. No humor. No commentary. Dry and precise.]
+
+PERMIT REFERENCE
+Permit No.: [from raw data]
+Permit Type: [DEMOLITION / RENOVATION / REDEVELOPMENT]
+Issue Date: [from raw data]
+Document Ref.: BPA-2026-[SITE ID]-[RANDOM 4 DIGITS]
+```
+
+Use this system prompt for the Claude API call:
+
+*"You are a field surveyor for Blasé Plaza Archives, a project that documents commercial plazas and strip malls in Miami-Dade County before they are demolished or renovated. You write neutral, observational, bureaucratic survey reports. Your tone is dry, precise, and documentary. Never use humor or editorial commentary. Infer the likely commercial character of each plaza from its address, square footage, zoning classification, and Miami-Dade neighborhood context. All bullet point lists must use the • character followed by a space and the item name, one per line, with no HTML tags."*
+
+---
+
+**DASHBOARD LAYOUT**
+
+Three views accessible from the left navigation panel and top nav bar:
+
+**1. MAP VIEW (default landing view)**
+- Full-width interactive map using **Leaflet.js** centered on Miami-Dade County (lat: 25.7617, lng: -80.1918, zoom: 10)
+- Every plaza in the database gets a map pin
+- Pin colors by demolition horizon:
+  - Red = IMMINENT (0–1 year)
+  - Amber = NEAR-TERM (1–3 years)
+  - Yellow = PROJECTED (3–5 years)
+  - Grey = Already demolished / permit expired
+- Clicking a pin opens a sidebar panel on the right showing the full survey report for that site
+- The sidebar has a "View Full Report" link that goes to the Report Card view
+- Map container has a visible 2px border and a plain label above it reading: `[ INTERACTIVE SITE MAP — MIAMI-DADE COUNTY ]`
+- Include a map legend in the corner showing pin color meanings, styled like a 2001 image map legend
+
+**2. LIST VIEW**
+- HTML-style table with visible borders and a filled dark header row
+- Columns: SITE ID / PLAZA NAME / LOCATION / SURVEY DATE / HORIZON / CLASSIFICATION / STATUS
+- Sortable by clicking column headers — show a plain ▲ or ▼ sort indicator
+- Clicking any row opens that site's Report Card
+- No zebra stripes, no rounded corners, no hover animations — just a basic blue row highlight on hover
+- Above the table: a plain text filter input labeled `SEARCH RECORDS:` and a dropdown to filter by HORIZON
+
+**3. REPORT CARD VIEW**
+- Full-page display of one survey entry
+- Rendered entirely as pre-formatted text using `white-space: pre` or a `<pre>` tag — typewritten appearance
+- Courier New font throughout, 13px, dark ink on off-white (`#f5f0e8`) background
+- Hard border around the entire card like a printed government form
+- Header: `BLASÉ PLAZA ARCHIVES`
+- Footer: Site ID + document reference number + `MIAMI-DADE COUNTY // NOT FOR PUBLIC DISTRIBUTION`
+- Two buttons below the card: `[ PRINT / EXPORT PDF ]` and `[ ← BACK TO LIST ]` — both styled as classic beveled HTML buttons
+- Bullet points rendered as literal `•` characters on their own lines — never as `<ul>` or `<li>` elements
+
+---
+
+**VISUAL DESIGN**
+
+The app must look and feel like a late 1990s to early 2000s county government website — the visual language of bureaucracy before design existed — while remaining fully functional, fast, and mobile responsive.
+
+**Aesthetic references:** Early EPA, FEMA, and Miami-Dade county portals circa 1998–2003. Table-based layouts. Clip-art seals. Tiled backgrounds. The feeling that a county IT employee built this in FrontPage and it was never redesigned.
+
+**Required visual details:**
+- Page background: medium grey (`#c0c0c0`) or a subtle tiled grey texture
+- Header bar: dark navy (`#000080`) or forest green (`#1a3a1a`) with white or pale yellow text, slight CSS bevel/emboss effect
+- `<hr>` dividers between every major section, used liberally
+- Buttons: beveled grey, slightly 3D — `background: #d4d0c8`, `border: 2px outset #ffffff`, classic cursor pointer
+- Link colors: `#0000EE` unvisited, `#551A8B` visited — no underline removal
+- A single scrolling marquee banner at the top of the homepage only. Text: `** BLASÉ PLAZA ARCHIVES // MIAMI-DADE COUNTY FIELD SURVEY DATABASE // RECORDS UPDATED DAILY // UNAUTHORIZED ACCESS PROHIBITED **`
+- Status indicators: small colored squares (not pills or badges)
+- No drop shadows, no gradients, no rounded corners, no slide animations
+- A pixelated or flat archival seal/badge in the header — clip-art energy, deliberately low-fi. Label it: `BLASÉ PLAZA ARCHIVES // EST. 1997`
+- Browser tab title: `BPA // BLASÉ PLAZA ARCHIVES`
+- A "Last Updated:" timestamp in the footer, plain text
+
+**Fonts:**
+- Headings: Verdana or Arial
+- Body/UI chrome: Verdana or Tahoma, 11–13px
+- All report content: Courier New exclusively
+
+**Layout:**
+- Left sidebar: vertical navigation panel with plain text links — `[ HOME ]`, `[ MAP ]`, `[ LIST VIEW ]`, `[ ABOUT ]`
+- Main content area to the right
+- Overall feel: HTML table layout, never redesigned
+- Mobile responsive — it should work on a phone even though it looks like it shouldn't
+
+---
+
+**TECH STACK**
+
+- Frontend: React
+- Backend: Node.js (Express) or Python (FastAPI) — your choice
+- Database: Supabase (stores survey entries, geocoordinates, permit metadata)
+- AI: Anthropic Claude API (`claude-sonnet-4-20250514`) for survey generation
+- Map: Leaflet.js — no API key required
+- Geocoding: OpenStreetMap Nominatim (free, no key) as primary; Miami-Dade GIS geocoder as secondary
+- Hosting: Deploy-ready on Replit
+
+---
+
+**SAMPLE DATA**
+
+If the Miami-Dade API is unreachable during build, seed the database with these 6 real Miami-Dade commercial corridor addresses and generate full survey entries for each using the Claude API:
+
+- 8300 SW 8th St, Miami, FL — HORIZON: IMMINENT
+- 1450 W 49th St, Hialeah, FL — HORIZON: NEAR-TERM
+- 3190 W Flagler St, Miami, FL — HORIZON: NEAR-TERM
+- 7600 N University Dr, Tamarac, FL — HORIZON: PROJECTED
+- 12101 SW 152nd St, Miami, FL — HORIZON: PROJECTED
+- 2250 SW 32nd Ave, Miami, FL — HORIZON: IMMINENT
+
+Generate full survey entries for all 6 using the Claude API during seeding.
+
+---
+
+**BULLET POINT RENDERING — CRITICAL**
+
+All bullet points in survey entries use the literal `•` character, not HTML list elements. Store them in the database as plain text strings like this:
+
+```
+Dominant Species
+• Nail Salon
+• Discount Pharmacy
+• Beauty Supply Store
+
+Secondary Species
+• Tax Preparation Office
+• Cellular Repair
+• Takeout Restaurant
+```
+
+Render all report card text inside a `<pre>` tag or with `white-space: pre` CSS. Never use `<ul>` or `<li>` tags inside report cards. The `•` character must appear exactly as typed.
+
+---
+
+**IMPORTANT DETAILS**
+
+- Every survey entry must follow the exact format above — no structural variation
+- Site IDs are permanent once assigned — never reassign or reuse
+- The app name everywhere is always: **Blasé Plaza Archives** — no other title, no subtitle
+- No user accounts, no social features — this is a read-only archive
+- Prompt the user for their Anthropic API key and Supabase project URL during first-run setup
+- If a permit record cannot be geocoded, skip the map pin but still show it in the list view
+- Deduplicate by address — do not create two entries for the same property
+
+---
