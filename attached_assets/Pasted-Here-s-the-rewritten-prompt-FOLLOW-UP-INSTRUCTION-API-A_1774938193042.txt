@@ -1,0 +1,51 @@
+Here's the rewritten prompt:
+
+FOLLOW-UP INSTRUCTION — API ACCESS PAGE CORRECTIONS
+Make the following two changes to the /api-access page:
+
+CHANGE 1 — Remove subtitle from page header
+In the About the API section, the current text reads:
+BLASÉ PLAZA ARCHIVES — DATA ACCESS API
+Miami-Dade County Field Survey Database
+Remove the second line. It should read only:
+BLASÉ PLAZA ARCHIVES — DATA ACCESS API
+Do not change anything else in that section.
+
+CHANGE 2 — API Key Request Form: remove auto-generation, send to email via Formspree
+The key request form should NOT generate an API key automatically. Instead, it should submit the request to the site owner via Formspree using this endpoint:
+https://formspree.io/f/mqegbakq
+This app is built in React. Use the React Formspree integration guide below to implement the form correctly.
+React integration using @formspree/react:
+Install the package:
+npm install @formspree/react
+Implement the form using the useForm hook from @formspree/react, posting to form ID mqegbakq. The form should collect these three fields:
+YOUR NAME:        [text input, name="name", required]
+EMAIL ADDRESS:    [text input, name="email", type="email", required]
+INTENDED USE:     [textarea, name="intended_use", required]
+The submit button should be styled as a classic beveled HTML button consistent with the rest of the app:
+[ SUBMIT REQUEST ]
+Style: background: #d4d0c8, border: 2px outset #ffffff, Verdana font, cursor pointer.
+The form should be disabled and the button should show [ SENDING... ] while submission is in progress.
+On successful submission, replace the form with this confirmation message:
+REQUEST RECEIVED
+
+Your access request has been submitted. The archive administrator 
+will review your request and respond to the email address provided.
+
+Allow 1-3 business days for a response.
+Style: #f5f0e8 background, 2px solid border, Courier New font — consistent with the report card aesthetic.
+On submission error, display this message below the form without clearing the fields:
+SUBMISSION ERROR
+
+Your request could not be sent. Please try again or contact the 
+archive administrator directly at k@burge.world
+Same styling as the confirmation box.
+
+CHANGE 3 — Update API documentation text
+In the About the API section, find this line:
+AI-generated field assessments based on documentary evidence available at time of survey.
+Replace it with:
+Field assessments based on documentary evidence available at time of survey.
+Do not change any other text in that section.
+
+No other changes to the /api-access page or any other part of the app.

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useForm } from "@formspree/react";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -6,44 +6,7 @@ export default function ApiAccess() {
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const apiBase = `${origin}${BASE}/api/v1/`;
 
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [intendedUse, setIntendedUse] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [generatedKey, setGeneratedKey] = useState<string | null>(null);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-
-    if (!name.trim() || !email.trim() || !intendedUse.trim()) {
-      setError("All fields are required.");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const res = await fetch(`${BASE}/api/keys/request`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ label: name, email, intendedUse }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.message ?? "Key generation failed.");
-      } else {
-        setGeneratedKey(data.key);
-        setName("");
-        setEmail("");
-        setIntendedUse("");
-      }
-    } catch {
-      setError("Network error. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }
+  const [state, handleSubmit] = useForm("mqegbakq");
 
   return (
     <div className="win98-window p-4 max-w-3xl">
@@ -56,16 +19,14 @@ export default function ApiAccess() {
 
       {/* Section 1 — About */}
       <div className="mt-4 mb-6">
-        <p className="font-bold text-sm mb-2 uppercase tracking-wide">
+        <p className="font-bold text-sm mb-4 uppercase tracking-wide">
           BLASÉ PLAZA ARCHIVES — DATA ACCESS API
         </p>
-        <p className="text-xs text-gray-700 mb-4">Miami-Dade County Field Survey Database</p>
 
         <p className="text-sm mb-3">
           This API provides programmatic read-only access to the Blasé Plaza Archives survey
           database. All records reflect permit data sourced from Miami-Dade County open data systems
-          and AI-generated field assessments based on documentary evidence available at time of
-          survey.
+          and field assessments based on documentary evidence available at time of survey.
         </p>
         <p className="text-sm mb-3">
           Access is free. An API key is required for all requests.
@@ -92,32 +53,19 @@ export default function ApiAccess() {
       <div className="mb-6">
         <p className="font-bold text-sm mb-4 uppercase tracking-wide">REQUEST AN API KEY</p>
 
-        {generatedKey ? (
+        {state.succeeded ? (
           <div
             className="p-4 border-2 border-black text-sm leading-relaxed"
             style={{ background: "#f5f0e8", fontFamily: "Courier New, monospace" }}
           >
-            <p className="font-bold mb-3">ACCESS GRANTED</p>
-            <p className="mb-3">
-              Your API key has been generated. Store it securely — it will not be displayed again.
+            <p className="font-bold mb-3">REQUEST RECEIVED</p>
+            <p className="mb-1">
+              Your access request has been submitted. The archive administrator
             </p>
-            <p className="font-bold mb-1">YOUR KEY:</p>
-            <p className="mb-3 text-base tracking-wider bg-white border border-[#808080] px-2 py-1 inline-block">
-              {generatedKey}
+            <p className="mb-1">
+              will review your request and respond to the email address provided.
             </p>
-            <p className="mb-1">Include this key in all requests as a header:</p>
-            <p className="mb-3 pl-4">X-BPA-API-Key: {generatedKey}</p>
-            <p className="mb-1">Rate limit: 100 requests per day.</p>
-            <p className="mb-1">Base URL: {apiBase}</p>
-            <p className="mt-3">Questions or issues: contact the archive administrator.</p>
-            <div className="mt-4">
-              <button
-                className="win98-btn text-sm px-3 py-1"
-                onClick={() => setGeneratedKey(null)}
-              >
-                [ REQUEST ANOTHER KEY ]
-              </button>
-            </div>
+            <p className="mt-3">Allow 1-3 business days for a response.</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4 max-w-lg">
@@ -125,43 +73,61 @@ export default function ApiAccess() {
               <label className="text-sm font-bold uppercase">YOUR NAME:</label>
               <input
                 type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                name="name"
+                required
                 className="border-2 border-[#808080] bg-white px-2 py-1 text-sm"
                 style={{ borderStyle: "inset" }}
-                disabled={loading}
+                disabled={state.submitting}
               />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-sm font-bold uppercase">EMAIL ADDRESS:</label>
               <input
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                name="email"
+                required
                 className="border-2 border-[#808080] bg-white px-2 py-1 text-sm"
                 style={{ borderStyle: "inset" }}
-                disabled={loading}
+                disabled={state.submitting}
               />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-sm font-bold uppercase">INTENDED USE:</label>
               <textarea
-                value={intendedUse}
-                onChange={(e) => setIntendedUse(e.target.value)}
+                name="intended_use"
+                required
                 rows={4}
                 className="border-2 border-[#808080] bg-white px-2 py-1 text-sm resize-none"
                 style={{ borderStyle: "inset" }}
-                disabled={loading}
+                disabled={state.submitting}
               />
             </div>
-            {error && (
-              <p className="text-sm text-red-700 font-bold border border-red-400 bg-red-50 px-2 py-1">
-                {error}
-              </p>
+
+            {state.errors !== null && (
+              <div
+                className="p-4 border-2 border-black text-sm leading-relaxed"
+                style={{ background: "#f5f0e8", fontFamily: "Courier New, monospace" }}
+              >
+                <p className="font-bold mb-3">SUBMISSION ERROR</p>
+                <p className="mb-1">Your request could not be sent. Please try again or contact the</p>
+                <p>archive administrator directly at k@burge.world</p>
+              </div>
             )}
+
             <div>
-              <button type="submit" className="win98-btn text-sm px-4 py-1" disabled={loading}>
-                {loading ? "[ PROCESSING... ]" : "[ REQUEST ACCESS KEY ]"}
+              <button
+                type="submit"
+                disabled={state.submitting}
+                style={{
+                  background: "#d4d0c8",
+                  border: "2px outset #ffffff",
+                  fontFamily: "Verdana, Arial, sans-serif",
+                  cursor: state.submitting ? "default" : "pointer",
+                  fontSize: "13px",
+                  padding: "4px 12px",
+                }}
+              >
+                {state.submitting ? "[ SENDING... ]" : "[ SUBMIT REQUEST ]"}
               </button>
             </div>
           </form>
@@ -211,8 +177,8 @@ export default function ApiAccess() {
 
         <p className="font-bold mb-2">NOTES</p>
         <p className="mb-1">Data reflects Miami-Dade County permit records and is updated daily.</p>
-        <p className="mb-1">AI-generated field assessments are documentary in nature and do not</p>
-        <p className="mb-1">constitute official municipal records.</p>
+        <p className="mb-1">Field assessments are documentary in nature and do not constitute</p>
+        <p className="mb-1">official municipal records.</p>
         <p className="mb-1">All data is read-only. No write access is available via this API.</p>
       </div>
     </div>
