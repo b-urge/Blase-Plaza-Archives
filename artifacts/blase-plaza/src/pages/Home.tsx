@@ -30,7 +30,7 @@ export default function Home() {
       <hr />
       
       <p className="mb-6 leading-relaxed">
-        This database serves as the central repository for field surveys of commercial plazas in Miami-Dade County slated for demolition or significant redevelopment. All records are official and strictly confidential.
+        This database serves as the central repository for field surveys of commercial plazas in Miami-Dade County slated for demolition or significant redevelopment.
       </p>
 
       <div className="win98-window-inset p-4 mb-6">
