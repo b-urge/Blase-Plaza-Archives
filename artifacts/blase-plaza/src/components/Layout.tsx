@@ -8,7 +8,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen flex flex-col bg-[#c0c0c0] font-sans text-black">
       {/* @ts-expect-error marquee is deprecated but required by design */}
       <marquee className="bg-black text-[#ffffaa] font-bold py-1 border-b-2 border-white text-sm" scrollamount="5">
-        RECORDS UPDATED DAILY
+        ** RECORDS UPDATED DAILY **
       </marquee>
       
       <header className="bg-[#000080] text-white p-3 flex justify-between items-center border-b-2 border-white border-t-2 border-[#808080]">
