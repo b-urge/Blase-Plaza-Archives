@@ -14,10 +14,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#c0c0c0] font-sans text-black">
-      {/* @ts-expect-error marquee is deprecated but required by design */}
-      <marquee className="bg-black text-[#ffffaa] font-bold py-1 border-b-2 border-white text-xs md:text-sm" scrollamount="5">
-        ** RECORDS UPDATED DAILY **
-      </marquee>
+      <div className="bg-black text-[#ffffaa] font-bold py-1 border-b-2 border-white text-xs md:text-sm overflow-hidden whitespace-nowrap">
+        <span style={{ display: "inline-block", animation: "marquee-scroll 14s linear infinite" }}>
+          ** BLASÉ PLAZA ARCHIVES //&nbsp;&nbsp;RECORDS UPDATED DAILY **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;** BLASÉ PLAZA ARCHIVES //&nbsp;&nbsp;RECORDS UPDATED DAILY **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        </span>
+      </div>
       
       <header className="bg-[#000080] text-white p-2 md:p-3 flex justify-between items-center border-b-2 border-white border-t-2 border-[#808080]">
         <div className="flex items-center gap-4">
