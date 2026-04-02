@@ -12,23 +12,19 @@ export default function About() {
 
       <h3 className="font-bold mb-2 text-base">MISSION STATEMENT</h3>
       <p className="mb-4">
-        The Blasé Plaza Archive serves as the official operational repository for documenting commercial retail structures, colloquially known as "strip malls" or "plazas," scheduled for demolition, major redevelopment, or that have otherwise reached the end of their viable economic lifespan.
+        The Blasé Plaza Archive is a database of strip malls and commercial plazas that are slated for demolition, redevelopment, or have otherwise closed down.
       </p>
 
       <p className="mb-4">
-        As the county expands and density requirements shift, these transitional spaces provide crucial data points regarding mid-to-late 20th century commercial planning, asphalt decay rates, and localized economic micro-climates. They are also something harder to quantify: liminal infrastructure. Neither destination nor non-place, the strip plaza exists at the edge of civic attention, functional, unremarkable, and largely undocumented until the moment it is gone.
+        As the county grows and zoning changes, these properties are disappearing faster than they're being documented. They represent a distinct era of commercial development — and a practical record of how neighborhoods have changed — but most are torn down without any systematic record being kept.
       </p>
 
       <p className="mb-4">
-        This archive operates on the premise that the period immediately preceding demolition or renovation is the most data-rich moment in a structure's lifespan. It is when vacancy patterns, signage degradation, tenant turnover, and surrounding demographic shift are most legible and most at risk of being lost. For sites undergoing renovation, the archive maintains longitudinal records tracking how physical transformation correlates with changes in population density, household income, and commercial composition over time, distinguishing between what is being updated and what is being replaced.
-      </p>
-
-      <p className="mb-4">
-        Each catalogued structure is assigned a profile encompassing architectural characteristics, construction era, current occupancy status, and ambient acoustic data. This information is made publicly accessible through the Archive's interactive dashboard and updated continuously as site conditions evolve.
+        This archive focuses on the period just before demolition or renovation, when a site shows the most information: which units are vacant, how signage and infrastructure have degraded, how many tenants have turned over. For sites being renovated rather than demolished, the archive tracks how physical changes correlate with shifts in population, income, and the types of businesses moving in — distinguishing between what's being updated and what's being replaced entirely.
       </p>
 
       <p className="mb-6">
-        The Blasé Plaza Archive does not argue for preservation. It argues for the record.
+        Each entry includes architectural details, construction date, current occupancy, and ambient sound recordings. Everything is publicly accessible through an interactive dashboard and updated as conditions change.
       </p>
 
       <h3 className="font-bold mb-2 text-base">DATA COLLECTION METHODOLOGY</h3>
