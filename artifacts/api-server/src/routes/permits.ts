@@ -8,6 +8,9 @@ import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
 
+const ARCGIS_BASE =
+  "https://gis-mdc.opendata.arcgis.com/datasets/MDC::building-permit.geojson";
+
 interface CitySource {
   name: string;
   fetch: () => Promise<PermitRecord[]>;
@@ -42,116 +45,45 @@ async function safeFetch(url: string, timeoutMs = 12000): Promise<Response> {
   return fetch(url, { signal: AbortSignal.timeout(timeoutMs) });
 }
 
-const COMMERCIAL_KEYWORDS = [
-  "DEMOLISH",
-  "TOTAL DEMOLITION",
-  "RENOVATION",
-  "REDEVELOPMENT",
-  "REBUILD",
-  "STRIP",
-  "MERCANTILE",
-  "RETAIL",
-  "COMMERCIAL",
-];
-const COMMERCIAL_ZONING = [
-  "BU-1",
-  "BU-1A",
-  "BU-2",
-  "BU-3",
-  "C-1",
-  "C-2",
-  "C-3",
-  "B-1",
-  "B-2",
-  "BUSINESS",
-  "COMMERCIAL",
-  "RETAIL",
-];
-
-function isCommercialWork(desc: string, zoning?: string): boolean {
-  const d = desc.toUpperCase();
-  const hasKeyword = COMMERCIAL_KEYWORDS.some((k) => d.includes(k));
-  const hasZoning = zoning
-    ? COMMERCIAL_ZONING.some((z) => zoning.toUpperCase().includes(z))
-    : false;
-  return hasKeyword || hasZoning;
-}
-
-function buildCitySource(
-  cityName: string,
-  cityFilter: string,
-  prefix: string,
-): CitySource {
-  return {
-    name: cityName,
+const CITY_SOURCES: CitySource[] = [
+  {
+    name: "Miami-Dade County (ArcGIS)",
     fetch: async () => {
       const results: PermitRecord[] = [];
       try {
-        const url = `https://opendata.miamidade.gov/resource/rbng-6mha.json?$where=city='${encodeURIComponent(cityFilter)}' AND issue_date >= '2021-01-01'&$limit=50`;
+        const where = `RESCOMM='C' AND (TYPE='DEMO' OR FFRMLINE LIKE '%DEMOLIT%' OR FFRMLINE LIKE '%RENOVATION%' OR FFRMLINE LIKE '%REDEVELOP%')`;
+        const url = `${ARCGIS_BASE}?where=${encodeURIComponent(where)}&resultRecordCount=100`;
         const resp = await safeFetch(url);
         if (!resp.ok) return results;
-        const data: any[] = await resp.json();
-        for (const p of data) {
-          const desc = p.work_description ?? "";
-          if (!isCommercialWork(desc, p.zoning_code)) continue;
-          const address = [p.address_line_1, `${cityName}, FL`]
-            .filter(Boolean)
-            .join(", ");
+        const data = await resp.json();
+        if (!data.features) return results;
+
+        for (const feature of data.features) {
+          const p = feature.properties;
+          const addr = (p.ADDRESS ?? "").trim();
+          if (!addr) continue;
+          const desc = (p.FFRMLINE ?? "").trim();
+          const permitType = (p.TYPE ?? "BLDG").toUpperCase();
+          const issueDate = p.ISSUDATE ? formatDate(p.ISSUDATE) : "Unknown";
+
           results.push({
-            address,
-            permitNo: p.permit_number ?? `${prefix}-${Date.now()}`,
-            permitType: (p.permit_type ?? "BUILDING").toUpperCase(),
-            issueDate: formatDate(p.issue_date ?? new Date().toISOString()),
+            address: `${addr}, Miami-Dade County, FL`,
+            permitNo: p.PROCNUM ?? `MDC-${p.OBJECTID}`,
+            permitType: permitType === "DEMO" ? "DEMOLITION" : "BUILDING",
+            issueDate,
             workDescription: desc,
-            squareFootage: p.total_sqft ? parseInt(p.total_sqft) : undefined,
-            zoningCode: p.zoning_code,
-            horizon: inferHorizon(p.permit_type ?? "", desc),
+            horizon: inferHorizon(
+              permitType === "DEMO" ? "DEMOLITION" : "BUILDING",
+              desc,
+            ),
           });
         }
       } catch (err) {
-        logger.warn({ err, city: cityName }, "City fetch failed");
+        logger.warn({ err }, "ArcGIS fetch failed");
       }
       return results;
     },
-  };
-}
-
-const CITY_SOURCES: CitySource[] = [
-  buildCitySource("Miami", "MIAMI", "MIA"),
-  buildCitySource("Hialeah", "HIALEAH", "HIL"),
-  buildCitySource("Miami Beach", "MIAMI BEACH", "MBH"),
-  buildCitySource("Coral Gables", "CORAL GABLES", "CG"),
-  buildCitySource("Doral", "DORAL", "DOR"),
-  buildCitySource("Miami Gardens", "MIAMI GARDENS", "MG"),
-  buildCitySource("Homestead", "HOMESTEAD", "HMS"),
-  buildCitySource("North Miami", "NORTH MIAMI", "NMI"),
-  buildCitySource("Opa-locka", "OPA-LOCKA", "OPA"),
-  buildCitySource("Kendall", "KENDALL", "KEN"),
-  buildCitySource("Cutler Bay", "CUTLER BAY", "CTB"),
-  buildCitySource("Aventura", "AVENTURA", "AVN"),
-  buildCitySource("Palmetto Bay", "PALMETTO BAY", "PMB"),
-  buildCitySource("Pinecrest", "PINECREST", "PIN"),
-  buildCitySource("South Miami", "SOUTH MIAMI", "SMI"),
-  buildCitySource("Florida City", "FLORIDA CITY", "FLC"),
-  buildCitySource("Medley", "MEDLEY", "MED"),
-  buildCitySource("Miami Springs", "MIAMI SPRINGS", "MSP"),
-  buildCitySource("Virginia Gardens", "VIRGINIA GARDENS", "VRG"),
-  buildCitySource("Sweetwater", "SWEETWATER", "SWT"),
-  buildCitySource("West Miami", "WEST MIAMI", "WMI"),
-  buildCitySource("Biscayne Park", "BISCAYNE PARK", "BPK"),
-  buildCitySource("El Portal", "EL PORTAL", "ELP"),
-  buildCitySource("Golden Beach", "GOLDEN BEACH", "GLB"),
-  buildCitySource("Indian Creek", "INDIAN CREEK", "INC"),
-  buildCitySource("Islandia", "ISLANDIA", "ISL"),
-  buildCitySource("Key Biscayne", "KEY BISCAYNE", "KYB"),
-  buildCitySource("Miami Shores", "MIAMI SHORES", "MSH"),
-  buildCitySource("Miami Lakes", "MIAMI LAKES", "MLK"),
-  buildCitySource("North Bay Village", "NORTH BAY VILLAGE", "NBV"),
-  buildCitySource("North Miami Beach", "NORTH MIAMI BEACH", "NMB"),
-  buildCitySource("Bal Harbour", "BAL HARBOUR", "BAL"),
-  buildCitySource("Bay Harbor Islands", "BAY HARBOR ISLANDS", "BHI"),
-  buildCitySource("Surfside", "SURFSIDE", "SRF"),
-  buildCitySource("Sunny Isles Beach", "SUNNY ISLES BEACH", "SIB"),
+  },
 ];
 
 const SAMPLE_PERMITS: PermitRecord[] = [
