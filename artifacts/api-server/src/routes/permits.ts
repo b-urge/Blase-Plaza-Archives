@@ -8,6 +8,152 @@ import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
 
+interface CitySource {
+  name: string;
+  fetch: () => Promise<PermitRecord[]>;
+}
+
+function inferHorizon(
+  permitType: string,
+  workDesc: string,
+): "IMMINENT" | "NEAR-TERM" | "PROJECTED" {
+  const type = permitType.toUpperCase();
+  const desc = workDesc.toUpperCase();
+  if (type === "DEMOLITION") return "IMMINENT";
+  if (desc.includes("TOTAL DEMOLITION") || desc.includes("DEMOLISH"))
+    return "NEAR-TERM";
+  if (desc.includes("REDEVELOPMENT") || desc.includes("REBUILD"))
+    return "NEAR-TERM";
+  return "PROJECTED";
+}
+
+function formatDate(dateStr: string): string {
+  try {
+    return new Date(dateStr).toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+    });
+  } catch {
+    return dateStr;
+  }
+}
+
+async function safeFetch(url: string, timeoutMs = 12000): Promise<Response> {
+  return fetch(url, { signal: AbortSignal.timeout(timeoutMs) });
+}
+
+const COMMERCIAL_KEYWORDS = [
+  "DEMOLISH",
+  "TOTAL DEMOLITION",
+  "RENOVATION",
+  "REDEVELOPMENT",
+  "REBUILD",
+  "STRIP",
+  "MERCANTILE",
+  "RETAIL",
+  "COMMERCIAL",
+];
+const COMMERCIAL_ZONING = [
+  "BU-1",
+  "BU-1A",
+  "BU-2",
+  "BU-3",
+  "C-1",
+  "C-2",
+  "C-3",
+  "B-1",
+  "B-2",
+  "BUSINESS",
+  "COMMERCIAL",
+  "RETAIL",
+];
+
+function isCommercialWork(desc: string, zoning?: string): boolean {
+  const d = desc.toUpperCase();
+  const hasKeyword = COMMERCIAL_KEYWORDS.some((k) => d.includes(k));
+  const hasZoning = zoning
+    ? COMMERCIAL_ZONING.some((z) => zoning.toUpperCase().includes(z))
+    : false;
+  return hasKeyword || hasZoning;
+}
+
+function buildCitySource(
+  cityName: string,
+  cityFilter: string,
+  prefix: string,
+): CitySource {
+  return {
+    name: cityName,
+    fetch: async () => {
+      const results: PermitRecord[] = [];
+      try {
+        const url = `https://opendata.miamidade.gov/resource/rbng-6mha.json?$where=city='${encodeURIComponent(cityFilter)}' AND issue_date >= '2021-01-01'&$limit=50`;
+        const resp = await safeFetch(url);
+        if (!resp.ok) return results;
+        const data: any[] = await resp.json();
+        for (const p of data) {
+          const desc = p.work_description ?? "";
+          if (!isCommercialWork(desc, p.zoning_code)) continue;
+          const address = [p.address_line_1, `${cityName}, FL`]
+            .filter(Boolean)
+            .join(", ");
+          results.push({
+            address,
+            permitNo: p.permit_number ?? `${prefix}-${Date.now()}`,
+            permitType: (p.permit_type ?? "BUILDING").toUpperCase(),
+            issueDate: formatDate(p.issue_date ?? new Date().toISOString()),
+            workDescription: desc,
+            squareFootage: p.total_sqft ? parseInt(p.total_sqft) : undefined,
+            zoningCode: p.zoning_code,
+            horizon: inferHorizon(p.permit_type ?? "", desc),
+          });
+        }
+      } catch (err) {
+        logger.warn({ err, city: cityName }, "City fetch failed");
+      }
+      return results;
+    },
+  };
+}
+
+const CITY_SOURCES: CitySource[] = [
+  buildCitySource("Miami", "MIAMI", "MIA"),
+  buildCitySource("Hialeah", "HIALEAH", "HIL"),
+  buildCitySource("Miami Beach", "MIAMI BEACH", "MBH"),
+  buildCitySource("Coral Gables", "CORAL GABLES", "CG"),
+  buildCitySource("Doral", "DORAL", "DOR"),
+  buildCitySource("Miami Gardens", "MIAMI GARDENS", "MG"),
+  buildCitySource("Homestead", "HOMESTEAD", "HMS"),
+  buildCitySource("North Miami", "NORTH MIAMI", "NMI"),
+  buildCitySource("Opa-locka", "OPA-LOCKA", "OPA"),
+  buildCitySource("Kendall", "KENDALL", "KEN"),
+  buildCitySource("Cutler Bay", "CUTLER BAY", "CTB"),
+  buildCitySource("Aventura", "AVENTURA", "AVN"),
+  buildCitySource("Palmetto Bay", "PALMETTO BAY", "PMB"),
+  buildCitySource("Pinecrest", "PINECREST", "PIN"),
+  buildCitySource("South Miami", "SOUTH MIAMI", "SMI"),
+  buildCitySource("Florida City", "FLORIDA CITY", "FLC"),
+  buildCitySource("Medley", "MEDLEY", "MED"),
+  buildCitySource("Miami Springs", "MIAMI SPRINGS", "MSP"),
+  buildCitySource("Virginia Gardens", "VIRGINIA GARDENS", "VRG"),
+  buildCitySource("Sweetwater", "SWEETWATER", "SWT"),
+  buildCitySource("West Miami", "WEST MIAMI", "WMI"),
+  buildCitySource("Biscayne Park", "BISCAYNE PARK", "BPK"),
+  buildCitySource("El Portal", "EL PORTAL", "ELP"),
+  buildCitySource("Golden Beach", "GOLDEN BEACH", "GLB"),
+  buildCitySource("Indian Creek", "INDIAN CREEK", "INC"),
+  buildCitySource("Islandia", "ISLANDIA", "ISL"),
+  buildCitySource("Key Biscayne", "KEY BISCAYNE", "KYB"),
+  buildCitySource("Miami Shores", "MIAMI SHORES", "MSH"),
+  buildCitySource("Miami Lakes", "MIAMI LAKES", "MLK"),
+  buildCitySource("North Bay Village", "NORTH BAY VILLAGE", "NBV"),
+  buildCitySource("North Miami Beach", "NORTH MIAMI BEACH", "NMB"),
+  buildCitySource("Bal Harbour", "BAL HARBOUR", "BAL"),
+  buildCitySource("Bay Harbor Islands", "BAY HARBOR ISLANDS", "BHI"),
+  buildCitySource("Surfside", "SURFSIDE", "SRF"),
+  buildCitySource("Sunny Isles Beach", "SUNNY ISLES BEACH", "SIB"),
+];
+
 const SAMPLE_PERMITS: PermitRecord[] = [
   {
     address: "8300 SW 8th St, Miami, FL",
@@ -24,7 +170,8 @@ const SAMPLE_PERMITS: PermitRecord[] = [
     permitNo: "B-2024-002891",
     permitType: "BUILDING",
     issueDate: "March 2024",
-    workDescription: "REDEVELOPMENT OF EXISTING MERCANTILE PLAZA - TOTAL DEMOLITION AND REBUILD",
+    workDescription:
+      "REDEVELOPMENT OF EXISTING MERCANTILE PLAZA - TOTAL DEMOLITION AND REBUILD",
     squareFootage: 8750,
     zoningCode: "C-1",
     horizon: "NEAR-TERM",
@@ -59,56 +206,6 @@ const SAMPLE_PERMITS: PermitRecord[] = [
     zoningCode: "BU-1A",
     horizon: "PROJECTED",
   },
-  {
-    address: "2250 SW 32nd Ave, Miami, FL",
-    permitNo: "B-2024-007123",
-    permitType: "DEMOLITION",
-    issueDate: "September 2024",
-    workDescription: "COMPLETE DEMOLITION OF COMMERCIAL STRIP MALL",
-    squareFootage: 6500,
-    zoningCode: "BU-1",
-    horizon: "IMMINENT",
-  },
-  {
-    address: "11401 NW 12th St, Miami, FL",
-    permitNo: "B-2024-009342",
-    permitType: "BUILDING",
-    issueDate: "July 2024",
-    workDescription: "REDEVELOPMENT OF EXISTING COMMERCIAL STRIP CORRIDOR - PARTIAL DEMOLITION AND REBUILD",
-    squareFootage: 14800,
-    zoningCode: "BU-1A",
-    horizon: "NEAR-TERM",
-  },
-  {
-    address: "6901 Biscayne Blvd, Miami, FL",
-    permitNo: "B-2025-001087",
-    permitType: "DEMOLITION",
-    issueDate: "February 2025",
-    workDescription: "TOTAL DEMOLITION OF EXISTING COMMERCIAL STRUCTURE FOR MIXED-USE REDEVELOPMENT",
-    squareFootage: 9200,
-    zoningCode: "BU-2",
-    horizon: "IMMINENT",
-  },
-  {
-    address: "3701 NW 7th St, Miami, FL",
-    permitNo: "B-2023-011204",
-    permitType: "BUILDING",
-    issueDate: "December 2023",
-    workDescription: "RENOVATION OF EXISTING RETAIL COMMERCIAL STRIP",
-    squareFootage: 11300,
-    zoningCode: "BU-1",
-    horizon: "PROJECTED",
-  },
-  {
-    address: "18710 NW 27th Ave, Miami Gardens, FL",
-    permitNo: "B-2024-005561",
-    permitType: "BUILDING",
-    issueDate: "May 2024",
-    workDescription: "REDEVELOPMENT OF COMMERCIAL NODE - DEMOLITION AND RECONSTRUCTION OF RETAIL PLAZA",
-    squareFootage: 17400,
-    zoningCode: "C-1",
-    horizon: "NEAR-TERM",
-  },
 ];
 
 async function getNextSiteNum(): Promise<number> {
@@ -120,28 +217,79 @@ async function getNextSiteNum(): Promise<number> {
   if (rows.length === 0) return 1;
   const last = parseInt(rows[0].siteId, 10);
   return isNaN(last) ? 1 : last + 1;
-};
-
-async function addressExists(address: string): Promise<boolean> {
-  const normalized = address.toLowerCase().trim();
-  const rows = await db.select({ id: surveysTable.id }).from(surveysTable);
-  return rows.some((r) => {
-    const raw = r.id.toString();
-    return raw === normalized;
-  });
 }
 
-async function locationExists(location: string): Promise<boolean> {
+async function locationExists(address: string): Promise<boolean> {
+  const fullLocation = `${address}, Miami-Dade County, Florida`;
   const rows = await db
     .select({ id: surveysTable.id })
     .from(surveysTable)
-    .where(eq(surveysTable.location, `${location}, Miami-Dade County, Florida`))
+    .where(eq(surveysTable.location, fullLocation))
     .limit(1);
   return rows.length > 0;
 }
 
+async function processPermit(
+  permit: PermitRecord,
+  siteNum: number,
+  sourceCity: string,
+  asPendingReview: boolean,
+): Promise<boolean> {
+  const exists = await locationExists(permit.address);
+  if (exists) {
+    logger.info({ address: permit.address }, "Skipping duplicate address");
+    return false;
+  }
+
+  const survey = await generateSurvey(permit, siteNum);
+  const geo = await geocodeAddress(permit.address);
+
+  const derivedStatus =
+    permit.horizon === "IMMINENT"
+      ? "Demolition Pending"
+      : permit.horizon === "NEAR-TERM"
+        ? "Renovation Pending"
+        : permit.horizon === "PROJECTED"
+          ? "Declining"
+          : "Post-Intervention";
+
+  await db.insert(surveysTable).values({
+    siteId: survey.siteId,
+    plazaName: survey.plazaName,
+    location: `${permit.address}, Miami-Dade County, Florida`,
+    surveyDate: survey.surveyDate,
+    demolitionHorizon: survey.demolitionHorizon,
+    plazaType: survey.plazaType,
+    architecturalStyle: survey.architecturalStyle,
+    parkingEntropy: survey.parkingEntropy,
+    shadeCoverage: survey.shadeCoverage,
+    signageDensity: survey.signageDensity,
+    vacancyRatio: survey.vacancyRatio,
+    pedestrianActivity: survey.pedestrianActivity,
+    reportText: survey.reportText,
+    permitNo: survey.permitNo,
+    permitType: survey.permitType,
+    permitIssueDate: survey.permitIssueDate,
+    documentRef: survey.documentRef,
+    latitude: geo?.lat ?? null,
+    longitude: geo?.lng ?? null,
+    status: asPendingReview ? "pending_review" : derivedStatus,
+    pendingReview: asPendingReview,
+    sourceCity,
+    lastSyncedAt: new Date(),
+    rawAddress: permit.address,
+    squareFootage: permit.squareFootage ?? null,
+    zoningCode: permit.zoningCode ?? null,
+  });
+
+  return true;
+}
+
 export async function seedIfEmpty(): Promise<void> {
-  const existing = await db.select({ id: surveysTable.id }).from(surveysTable).limit(1);
+  const existing = await db
+    .select({ id: surveysTable.id })
+    .from(surveysTable)
+    .limit(1);
   if (existing.length > 0) {
     logger.info("Database already has records, skipping auto-seed");
     return;
@@ -154,57 +302,105 @@ export async function seedIfEmpty(): Promise<void> {
 
   for (const permit of SAMPLE_PERMITS) {
     try {
-      const fullLocation = `${permit.address}, Miami-Dade County, Florida`;
-      const exists = await locationExists(permit.address);
-      if (exists) {
-        logger.info({ address: permit.address }, "Skipping duplicate address");
-        continue;
+      const ok = await processPermit(permit, siteNum, "Sample Data", false);
+      if (ok) {
+        siteNum++;
+        processed++;
       }
-
-      logger.info({ address: permit.address }, "Auto-seeding survey for permit");
-      const survey = await generateSurvey(permit, siteNum);
-      const geo = await geocodeAddress(permit.address);
-
-      await db.insert(surveysTable).values({
-        siteId: survey.siteId,
-        plazaName: survey.plazaName,
-        location: fullLocation,
-        surveyDate: survey.surveyDate,
-        demolitionHorizon: survey.demolitionHorizon,
-        plazaType: survey.plazaType,
-        architecturalStyle: survey.architecturalStyle,
-        parkingEntropy: survey.parkingEntropy,
-        shadeCoverage: survey.shadeCoverage,
-        signageDensity: survey.signageDensity,
-        vacancyRatio: survey.vacancyRatio,
-        pedestrianActivity: survey.pedestrianActivity,
-        reportText: survey.reportText,
-        permitNo: survey.permitNo,
-        permitType: survey.permitType,
-        permitIssueDate: survey.permitIssueDate,
-        documentRef: survey.documentRef,
-        latitude: geo?.lat ?? null,
-        longitude: geo?.lng ?? null,
-        status: permit.horizon === "IMMINENT" ? "Demolition Pending"
-          : permit.horizon === "NEAR-TERM" ? "Renovation Pending"
-          : permit.horizon === "PROJECTED" ? "Declining"
-          : "Post-Intervention",
-        lastSyncedAt: new Date(),
-        rawAddress: permit.address,
-        squareFootage: permit.squareFootage ?? null,
-        zoningCode: permit.zoningCode ?? null,
-      });
-
-      siteNum++;
-      processed++;
     } catch (err) {
-      logger.error({ err, address: permit.address }, "Auto-seed: failed to generate/insert survey");
+      logger.error({ err, address: permit.address }, "Auto-seed failed");
       errors++;
     }
   }
 
   logger.info({ processed, errors }, "Auto-seed complete");
 }
+
+router.post("/permits/sync", async (req, res) => {
+  try {
+    let processed = 0;
+    let errors = 0;
+    let siteNum = await getNextSiteNum();
+    const sourceResults: Record<string, { found: number; added: number }> = {};
+
+    for (const source of CITY_SOURCES) {
+      sourceResults[source.name] = { found: 0, added: 0 };
+      let permits: PermitRecord[] = [];
+
+      try {
+        permits = await source.fetch();
+        sourceResults[source.name].found = permits.length;
+        logger.info(
+          { city: source.name, count: permits.length },
+          "Fetched permits from source",
+        );
+      } catch (err) {
+        logger.warn({ err, city: source.name }, "Source fetch failed entirely");
+        continue;
+      }
+
+      for (const permit of permits) {
+        try {
+          const ok = await processPermit(permit, siteNum, source.name, true);
+          if (ok) {
+            siteNum++;
+            processed++;
+            sourceResults[source.name].added++;
+          }
+        } catch (err) {
+          logger.error(
+            { err, address: permit.address },
+            "Error processing permit",
+          );
+          errors++;
+        }
+      }
+    }
+
+    if (processed === 0) {
+      logger.info("No live permits found — checking if sample seed needed");
+      const existing = await db
+        .select({ id: surveysTable.id })
+        .from(surveysTable)
+        .limit(1);
+      if (existing.length === 0) {
+        for (const permit of SAMPLE_PERMITS) {
+          try {
+            const ok = await processPermit(
+              permit,
+              siteNum,
+              "Sample Data",
+              false,
+            );
+            if (ok) {
+              siteNum++;
+              processed++;
+            }
+          } catch (err) {
+            logger.error({ err }, "Sample fallback error");
+            errors++;
+          }
+        }
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Sync complete. ${processed} new entries queued for review. ${errors} errors.`,
+      processed,
+      errors,
+      sources: sourceResults,
+    });
+  } catch (err) {
+    req.log.error({ err }, "Sync operation failed");
+    res.status(500).json({
+      success: false,
+      message: "Sync failed",
+      processed: 0,
+      errors: 1,
+    });
+  }
+});
 
 router.post("/permits/seed", async (req, res) => {
   try {
@@ -214,52 +410,13 @@ router.post("/permits/seed", async (req, res) => {
 
     for (const permit of SAMPLE_PERMITS) {
       try {
-        const fullLocation = `${permit.address}, Miami-Dade County, Florida`;
-        const exists = await locationExists(permit.address);
-        if (exists) {
-          logger.info({ address: permit.address }, "Skipping duplicate address");
-          continue;
+        const ok = await processPermit(permit, siteNum, "Sample Data", false);
+        if (ok) {
+          siteNum++;
+          processed++;
         }
-
-        logger.info({ address: permit.address }, "Generating survey for sample permit");
-        const survey = await generateSurvey(permit, siteNum);
-
-        const geo = await geocodeAddress(permit.address);
-
-        await db.insert(surveysTable).values({
-          siteId: survey.siteId,
-          plazaName: survey.plazaName,
-          location: fullLocation,
-          surveyDate: survey.surveyDate,
-          demolitionHorizon: survey.demolitionHorizon,
-          plazaType: survey.plazaType,
-          architecturalStyle: survey.architecturalStyle,
-          parkingEntropy: survey.parkingEntropy,
-          shadeCoverage: survey.shadeCoverage,
-          signageDensity: survey.signageDensity,
-          vacancyRatio: survey.vacancyRatio,
-          pedestrianActivity: survey.pedestrianActivity,
-          reportText: survey.reportText,
-          permitNo: survey.permitNo,
-          permitType: survey.permitType,
-          permitIssueDate: survey.permitIssueDate,
-          documentRef: survey.documentRef,
-          latitude: geo?.lat ?? null,
-          longitude: geo?.lng ?? null,
-          status: permit.horizon === "IMMINENT" ? "Demolition Pending"
-            : permit.horizon === "NEAR-TERM" ? "Renovation Pending"
-            : permit.horizon === "PROJECTED" ? "Declining"
-            : "Post-Intervention",
-          lastSyncedAt: new Date(),
-          rawAddress: permit.address,
-          squareFootage: permit.squareFootage ?? null,
-          zoningCode: permit.zoningCode ?? null,
-        });
-
-        siteNum++;
-        processed++;
       } catch (err) {
-        logger.error({ err, address: permit.address }, "Failed to generate/insert survey");
+        logger.error({ err, address: permit.address }, "Seed error");
         errors++;
       }
     }
@@ -272,162 +429,12 @@ router.post("/permits/seed", async (req, res) => {
     });
   } catch (err) {
     req.log.error({ err }, "Seed operation failed");
-    res.status(500).json({ success: false, message: "Seed operation failed", processed: 0, errors: 1 });
-  }
-});
-
-router.post("/permits/sync", async (req, res) => {
-  try {
-    let processed = 0;
-    let errors = 0;
-    let siteNum = await getNextSiteNum();
-
-    const FIVE_YEARS_AGO = new Date();
-    FIVE_YEARS_AGO.setFullYear(FIVE_YEARS_AGO.getFullYear() - 5);
-    const TWO_YEARS_AGO = new Date();
-    TWO_YEARS_AGO.setFullYear(TWO_YEARS_AGO.getFullYear() - 2);
-
-    const fiveYearsAgoStr = FIVE_YEARS_AGO.toISOString().slice(0, 10);
-    const twoYearsAgoStr = TWO_YEARS_AGO.toISOString().slice(0, 10);
-
-    const DEMOLITION_URL = `https://opendata.miamidade.gov/resource/rbng-6mha.json?$where=permit_type='DEMOLITION' AND (occupancy_code='MERCANTILE' OR occupancy_code='BUSINESS' OR occupancy_code='RETAIL') AND issue_date >= '${fiveYearsAgoStr}'&$limit=50`;
-    const RENOVATION_URL = `https://opendata.miamidade.gov/resource/rbng-6mha.json?$where=permit_type='BUILDING' AND issue_date >= '${twoYearsAgoStr}' AND (occupancy_code='MERCANTILE' OR occupancy_code='BUSINESS' OR occupancy_code='RETAIL')&$limit=50`;
-
-    let apiPermits: Array<{
-      permit_number?: string;
-      permit_type?: string;
-      issue_date?: string;
-      work_description?: string;
-      address_line_1?: string;
-      address_line_2?: string;
-      city?: string;
-      zip_code?: string;
-    }> = [];
-
-    try {
-      const [demolResp, renovResp] = await Promise.allSettled([
-        fetch(DEMOLITION_URL, { signal: AbortSignal.timeout(10000) }),
-        fetch(RENOVATION_URL, { signal: AbortSignal.timeout(10000) }),
-      ]);
-
-      if (demolResp.status === "fulfilled" && demolResp.value.ok) {
-        const data = await demolResp.value.json();
-        if (Array.isArray(data)) apiPermits = apiPermits.concat(data.slice(0, 25));
-      }
-      if (renovResp.status === "fulfilled" && renovResp.value.ok) {
-        const data = await renovResp.value.json();
-        if (Array.isArray(data)) {
-          const keywords = ["DEMOLISH", "TOTAL DEMOLITION", "RENOVATION", "REDEVELOPMENT", "REBUILD"];
-          const filtered = (data as typeof apiPermits).filter((p) => {
-            const desc = (p.work_description ?? "").toUpperCase();
-            return keywords.some((k) => desc.includes(k));
-          });
-          apiPermits = apiPermits.concat(filtered.slice(0, 25));
-        }
-      }
-    } catch (err) {
-      logger.warn({ err }, "Miami-Dade API unreachable, falling back to sample data");
-    }
-
-    if (apiPermits.length === 0) {
-      logger.info("No permits from API, seeding sample data");
-      const existing = await db.select({ id: surveysTable.id }).from(surveysTable).limit(1);
-      if (existing.length === 0) {
-        for (const permit of SAMPLE_PERMITS) {
-          try {
-            const exists = await locationExists(permit.address);
-            if (exists) continue;
-            const survey = await generateSurvey(permit, siteNum);
-            const geo = await geocodeAddress(permit.address);
-            await db.insert(surveysTable).values({
-              ...survey,
-              location: `${permit.address}, Miami-Dade County, Florida`,
-              latitude: geo?.lat ?? null,
-              longitude: geo?.lng ?? null,
-              status: permit.horizon === "IMMINENT" ? "Demolition Pending"
-                : permit.horizon === "NEAR-TERM" ? "Renovation Pending"
-                : permit.horizon === "PROJECTED" ? "Declining"
-                : "Post-Intervention",
-              lastSyncedAt: new Date(),
-              rawAddress: permit.address,
-              squareFootage: permit.squareFootage ?? null,
-              zoningCode: permit.zoningCode ?? null,
-            });
-            siteNum++;
-            processed++;
-          } catch (err) {
-            logger.error({ err }, "Error seeding fallback");
-            errors++;
-          }
-        }
-      }
-    } else {
-      for (const p of apiPermits) {
-        try {
-          const addrParts = [p.address_line_1, p.city].filter(Boolean);
-          const address = addrParts.join(", ");
-          if (!address) continue;
-
-          const exists = await locationExists(address);
-          if (exists) continue;
-
-          const permitType = (p.permit_type ?? "BUILDING").toUpperCase();
-          const issueDate = p.issue_date
-            ? new Date(p.issue_date).toLocaleDateString("en-US", { month: "long", year: "numeric" })
-            : "Unknown";
-
-          let horizon: "IMMINENT" | "NEAR-TERM" | "PROJECTED" = "PROJECTED";
-          if (permitType === "DEMOLITION") horizon = "IMMINENT";
-          else {
-            const desc = (p.work_description ?? "").toUpperCase();
-            if (desc.includes("TOTAL DEMOLITION") || desc.includes("DEMOLISH")) horizon = "NEAR-TERM";
-            else if (desc.includes("REDEVELOPMENT") || desc.includes("REBUILD")) horizon = "NEAR-TERM";
-            else horizon = "PROJECTED";
-          }
-
-          const permit: PermitRecord = {
-            address,
-            permitNo: p.permit_number ?? `API-${Date.now()}`,
-            permitType,
-            issueDate,
-            workDescription: p.work_description,
-            horizon,
-          };
-
-          const survey = await generateSurvey(permit, siteNum);
-          const geo = await geocodeAddress(address);
-
-          await db.insert(surveysTable).values({
-            ...survey,
-            location: `${address}, Miami-Dade County, Florida`,
-            latitude: geo?.lat ?? null,
-            longitude: geo?.lng ?? null,
-            status: horizon === "IMMINENT" ? "Demolition Pending"
-              : horizon === "NEAR-TERM" ? "Renovation Pending"
-              : horizon === "PROJECTED" ? "Declining"
-              : "Post-Intervention",
-            lastSyncedAt: new Date(),
-            rawAddress: address,
-          });
-
-          siteNum++;
-          processed++;
-        } catch (err) {
-          logger.error({ err }, "Error processing API permit");
-          errors++;
-        }
-      }
-    }
-
-    res.json({
-      success: true,
-      message: `Sync complete. Processed ${processed} new surveys with ${errors} errors.`,
-      processed,
-      errors,
+    res.status(500).json({
+      success: false,
+      message: "Seed failed",
+      processed: 0,
+      errors: 1,
     });
-  } catch (err) {
-    req.log.error({ err }, "Sync operation failed");
-    res.status(500).json({ success: false, message: "Sync failed", processed: 0, errors: 1 });
   }
 });
 

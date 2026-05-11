@@ -1,4 +1,12 @@
-import { pgTable, serial, text, real, timestamp, integer } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  serial,
+  text,
+  real,
+  timestamp,
+  integer,
+  boolean,
+} from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -24,6 +32,9 @@ export const surveysTable = pgTable("surveys", {
   latitude: real("latitude"),
   longitude: real("longitude"),
   status: text("status").notNull().default("ACTIVE"),
+  pendingReview: boolean("pending_review").notNull().default(false),
+  reviewedAt: timestamp("reviewed_at"),
+  sourceCity: text("source_city"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   lastSyncedAt: timestamp("last_synced_at"),
   rawAddress: text("raw_address"),
@@ -31,6 +42,9 @@ export const surveysTable = pgTable("surveys", {
   zoningCode: text("zoning_code"),
 });
 
-export const insertSurveySchema = createInsertSchema(surveysTable).omit({ id: true, createdAt: true });
+export const insertSurveySchema = createInsertSchema(surveysTable).omit({
+  id: true,
+  createdAt: true,
+});
 export type InsertSurvey = z.infer<typeof insertSurveySchema>;
 export type Survey = typeof surveysTable.$inferSelect;

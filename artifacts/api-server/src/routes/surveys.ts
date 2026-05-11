@@ -8,29 +8,44 @@ const router: IRouter = Router();
 router.get("/surveys/stats", async (req, res) => {
   try {
     const [totals, statusTotals, lastUpdated] = await Promise.all([
-      db.select({
-        demolitionHorizon: surveysTable.demolitionHorizon,
-        count: sql<number>`cast(count(*) as int)`,
-      }).from(surveysTable).groupBy(surveysTable.demolitionHorizon),
-      db.select({
-        status: surveysTable.status,
-        count: sql<number>`cast(count(*) as int)`,
-      }).from(surveysTable).groupBy(surveysTable.status),
-      db.select({ lastSyncedAt: surveysTable.lastSyncedAt })
+      db
+        .select({
+          demolitionHorizon: surveysTable.demolitionHorizon,
+          count: sql<number>`cast(count(*) as int)`,
+        })
+        .from(surveysTable)
+        .groupBy(surveysTable.demolitionHorizon),
+      db
+        .select({
+          status: surveysTable.status,
+          count: sql<number>`cast(count(*) as int)`,
+        })
+        .from(surveysTable)
+        .groupBy(surveysTable.status),
+      db
+        .select({ lastSyncedAt: surveysTable.lastSyncedAt })
         .from(surveysTable)
         .orderBy(desc(surveysTable.lastSyncedAt))
         .limit(1),
     ]);
 
     const byHorizon: Record<string, number> = {
-      IMMINENT: 0, "NEAR-TERM": 0, PROJECTED: 0, EXPIRED: 0,
+      IMMINENT: 0,
+      "NEAR-TERM": 0,
+      PROJECTED: 0,
+      EXPIRED: 0,
     };
     const byStatus: Record<string, number> = {
-      "Active": 0, "Declining": 0, "Renovation Pending": 0, "Demolition Pending": 0, "Post-Intervention": 0,
+      Active: 0,
+      Declining: 0,
+      "Renovation Pending": 0,
+      "Demolition Pending": 0,
+      "Post-Intervention": 0,
     };
     let total = 0;
     for (const row of totals) {
-      byHorizon[row.demolitionHorizon] = (byHorizon[row.demolitionHorizon] ?? 0) + row.count;
+      byHorizon[row.demolitionHorizon] =
+        (byHorizon[row.demolitionHorizon] ?? 0) + row.count;
       total += row.count;
     }
     for (const row of statusTotals) {
@@ -69,8 +84,8 @@ router.get("/surveys", async (req, res) => {
         or(
           ilike(surveysTable.plazaName, `%${search}%`),
           ilike(surveysTable.location, `%${search}%`),
-          ilike(surveysTable.siteId, `%${search}%`)
-        )
+          ilike(surveysTable.siteId, `%${search}%`),
+        ),
       );
     }
     if (conditions.length === 1) {
@@ -100,7 +115,7 @@ router.get("/surveys", async (req, res) => {
         ...r,
         createdAt: r.createdAt.toISOString(),
         lastSyncedAt: r.lastSyncedAt?.toISOString() ?? null,
-      }))
+      })),
     );
   } catch (err) {
     req.log.error({ err }, "Failed to fetch surveys");
@@ -115,7 +130,11 @@ router.get("/surveys/:id", async (req, res) => {
       res.status(400).json({ error: "Invalid ID" });
       return;
     }
-    const rows = await db.select().from(surveysTable).where(eq(surveysTable.id, id)).limit(1);
+    const rows = await db
+      .select()
+      .from(surveysTable)
+      .where(eq(surveysTable.id, id))
+      .limit(1);
     if (rows.length === 0) {
       res.status(404).json({ error: "Survey not found" });
       return;
