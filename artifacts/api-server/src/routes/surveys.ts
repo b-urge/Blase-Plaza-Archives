@@ -99,16 +99,33 @@ router.get("/surveys", async (req, res) => {
     }
 
     const orderDir = sortDir === "desc" ? desc : asc;
+    const descending = sortDir === "desc";
+
     if (sortBy === "plazaName") {
       query = query.orderBy(orderDir(surveysTable.plazaName));
     } else if (sortBy === "location") {
       query = query.orderBy(orderDir(surveysTable.location));
     } else if (sortBy === "surveyDate") {
-      query = query.orderBy(orderDir(surveysTable.surveyDate));
+      // survey_date is text like "December 2023", so a plain sort orders it
+      // alphabetically by month name. Parse it to a real date instead, and
+      // tolerate values that are not in that shape.
+      const parsed = sql`CASE WHEN ${surveysTable.surveyDate} ~ '^[A-Za-z]+ [0-9]{4}$' THEN to_date(${surveysTable.surveyDate}, 'Month YYYY') END`;
+      query = query.orderBy(
+        descending
+          ? sql`${parsed} DESC NULLS LAST`
+          : sql`${parsed} ASC NULLS LAST`,
+      );
     } else if (sortBy === "demolitionHorizon") {
-      query = query.orderBy(orderDir(surveysTable.demolitionHorizon));
+      // Alphabetical order would lead with EXPIRED. Order by urgency instead,
+      // which is what the column means.
+      const urgency = sql`CASE ${surveysTable.demolitionHorizon} WHEN 'IMMINENT' THEN 0 WHEN 'NEAR-TERM' THEN 1 WHEN 'PROJECTED' THEN 2 WHEN 'EXPIRED' THEN 3 ELSE 4 END`;
+      query = query.orderBy(
+        descending ? sql`${urgency} DESC` : sql`${urgency} ASC`,
+      );
     } else if (sortBy === "siteId") {
-      query = query.orderBy(orderDir(surveysTable.siteId));
+      // site_id is text, so it sorts "100" before "64". It now mirrors the row
+      // id, which is an integer, so order by that.
+      query = query.orderBy(orderDir(surveysTable.id));
     } else {
       query = query.orderBy(asc(surveysTable.id));
     }
