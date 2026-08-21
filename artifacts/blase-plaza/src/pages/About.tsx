@@ -11,6 +11,26 @@ export default function About() {
         <strong>JURISDICTION:</strong> Broward County
       </p>
 
+      <div className="win98-window-inset p-4 mb-6 text-[12px]">
+        <p className="font-bold mb-2">NOTICE</p>
+        <p className="mb-2">
+          This archive is an independent hobby project maintained by one person.
+          It is not affiliated with Broward County, the City of Fort Lauderdale,
+          or any municipal authority.
+        </p>
+        <p className="mb-2">
+          Records are added, reclassified, and corrected continuously.
+          Classifications, methodology, and site identifiers are still settling
+          and may change without notice.
+        </p>
+        <p>
+          Survey reports are generated from public permit and parcel records and
+          are documentary in nature. For authoritative information, consult the
+          City of Fort Lauderdale permit records and the Broward County Property
+          Appraiser.
+        </p>
+      </div>
+
       <hr className="my-6 border-black" />
 
       <h3 className="font-bold mb-2 text-base">MISSION STATEMENT</h3>

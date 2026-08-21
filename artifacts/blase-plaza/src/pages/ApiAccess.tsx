@@ -24,26 +24,43 @@ export default function ApiAccess() {
         </p>
 
         <p className="text-sm mb-3">
-          This API provides programmatic read-only access to the Blasé Plaza Archives survey
-          database. All records reflect permit data sourced from Broward County open data systems
-          and field assessments based on documentary evidence available at time of survey.
+          This API provides programmatic read-only access to the Blasé Plaza
+          Archives survey database. All records reflect permit data sourced from
+          Broward County open data systems and field assessments based on
+          documentary evidence available at time of survey.
         </p>
         <p className="text-sm mb-3">
           Access is free. An API key is required for all requests.
         </p>
+
+        <div className="text-sm p-3 border-2 border-[#808080] bg-[#f0ede8] mb-3">
+          <p className="font-bold mb-1">NOTICE — HOBBY PROJECT</p>
+          <p className="mb-1">
+            This is an independent personal project, not affiliated with any
+            municipal authority. The archive is under continuous revision.
+          </p>
+          <p>
+            Records, classifications, and site identifiers change without
+            versioning or deprecation notice. Do not build production
+            dependencies on this API.
+          </p>
+        </div>
 
         <div
           className="text-sm p-3 border border-[#808080] bg-[#f0ede8] mb-3 overflow-x-auto"
           style={{ fontFamily: "Courier New, monospace" }}
         >
           <p className="mb-1">Base URL: {apiBase}</p>
-          <p className="mb-1">Authentication: Include your key in the request header:</p>
+          <p className="mb-1">
+            Authentication: Include your key in the request header:
+          </p>
           <p className="mb-1 pl-4">X-BPA-API-Key: YOUR-KEY-HERE</p>
           <p className="mb-1">Rate limit: 100 requests per day per key.</p>
         </div>
 
         <p className="text-sm">
-          Data is updated daily. Records reflect permit status as of the most recent sync.
+          Data is updated daily. Records reflect permit status as of the most
+          recent sync.
         </p>
       </div>
 
@@ -51,7 +68,9 @@ export default function ApiAccess() {
 
       {/* Section 2 — Request Key Form */}
       <div className="mb-6">
-        <p className="font-bold text-sm mb-4 uppercase tracking-wide">REQUEST AN API KEY</p>
+        <p className="font-bold text-sm mb-4 uppercase tracking-wide">
+          REQUEST AN API KEY
+        </p>
 
         {state.succeeded ? (
           <div
@@ -59,11 +78,18 @@ export default function ApiAccess() {
             style={{ background: "#f5f0e8" }}
           >
             <p className="font-bold mb-3">REQUEST RECEIVED</p>
-            <p className="mb-3">Your access request has been submitted. The archive administrator will review your request and respond to the email address provided.</p>
+            <p className="mb-3">
+              Your access request has been submitted. The archive administrator
+              will review your request and respond to the email address
+              provided.
+            </p>
             <p>Allow 1-3 business days for a response.</p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4 max-w-lg">
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col gap-4 max-w-lg"
+          >
             <div className="flex flex-col gap-1">
               <label className="text-sm font-bold uppercase">YOUR NAME:</label>
               <input
@@ -76,7 +102,9 @@ export default function ApiAccess() {
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-bold uppercase">EMAIL ADDRESS:</label>
+              <label className="text-sm font-bold uppercase">
+                EMAIL ADDRESS:
+              </label>
               <input
                 type="email"
                 name="email"
@@ -87,7 +115,9 @@ export default function ApiAccess() {
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-bold uppercase">INTENDED USE:</label>
+              <label className="text-sm font-bold uppercase">
+                INTENDED USE:
+              </label>
               <textarea
                 name="intended_use"
                 required
@@ -104,7 +134,10 @@ export default function ApiAccess() {
                 style={{ background: "#f5f0e8" }}
               >
                 <p className="font-bold mb-3">SUBMISSION ERROR</p>
-                <p>Your request could not be sent. Please try again or contact the archive administrator directly at k@burge.world</p>
+                <p>
+                  Your request could not be sent. Please try again or contact
+                  the archive administrator directly at k@burge.world
+                </p>
               </div>
             )}
 
@@ -132,25 +165,73 @@ export default function ApiAccess() {
 
       {/* Section 3 — Documentation */}
       <div className="text-sm leading-relaxed">
-        <p className="font-bold mb-3 uppercase tracking-wide">API DOCUMENTATION</p>
+        <p className="font-bold mb-3 uppercase tracking-wide">
+          API DOCUMENTATION
+        </p>
 
         <p className="font-bold mb-2">ENDPOINTS</p>
-        <p className="mb-1" style={{ fontFamily: "Courier New, monospace" }}>GET /api/v1/plazas</p>
-        <p className="mb-1 pl-4">Returns all plaza records. Optional query parameters:</p>
-        <p className="mb-1 pl-8" style={{ fontFamily: "Courier New, monospace" }}>?horizon=IMMINENT|NEAR-TERM|PROJECTED|EXPIRED</p>
-        <p className="mb-1 pl-8" style={{ fontFamily: "Courier New, monospace" }}>?classification=[plaza type]</p>
-        <p className="mb-1 pl-8" style={{ fontFamily: "Courier New, monospace" }}>?limit=[integer, max 100]</p>
-        <p className="mb-1 pl-8" style={{ fontFamily: "Courier New, monospace" }}>?offset=[integer, for pagination]</p>
+        <p className="mb-1" style={{ fontFamily: "Courier New, monospace" }}>
+          GET /api/v1/plazas
+        </p>
+        <p className="mb-1 pl-4">
+          Returns all plaza records. Optional query parameters:
+        </p>
+        <p
+          className="mb-1 pl-8"
+          style={{ fontFamily: "Courier New, monospace" }}
+        >
+          ?horizon=IMMINENT|NEAR-TERM|PROJECTED|EXPIRED
+        </p>
+        <p
+          className="mb-1 pl-8"
+          style={{ fontFamily: "Courier New, monospace" }}
+        >
+          ?classification=[plaza type]
+        </p>
+        <p
+          className="mb-1 pl-8"
+          style={{ fontFamily: "Courier New, monospace" }}
+        >
+          ?limit=[integer, max 100]
+        </p>
+        <p
+          className="mb-1 pl-8"
+          style={{ fontFamily: "Courier New, monospace" }}
+        >
+          ?offset=[integer, for pagination]
+        </p>
 
-        <p className="mt-3 mb-1" style={{ fontFamily: "Courier New, monospace" }}>GET /api/v1/plazas/:site_id</p>
-        <p className="mb-1 pl-4">Returns a single plaza record by Site ID (zero-padded, e.g. "01").</p>
+        <p
+          className="mt-3 mb-1"
+          style={{ fontFamily: "Courier New, monospace" }}
+        >
+          GET /api/v1/plazas/:site_id
+        </p>
+        <p className="mb-1 pl-4">
+          Returns a single plaza record by Site ID (zero-padded, e.g. "01").
+        </p>
 
         <hr className="border-[#808080] my-4" />
 
         <p className="font-bold mb-2">RESPONSE FORMAT</p>
         <p className="mb-1">All responses return JSON. HTTP 200 on success.</p>
-        <p className="mb-1">List responses include: total, limit, offset, records[].</p>
-        <p className="mb-1">Each record includes: <span style={{ fontFamily: "Courier New, monospace" }}>site_id</span>, plaza_name, location, survey_date, demolition_horizon, status, classification, environmental_metrics, field_notes, <span style={{ fontFamily: "Courier New, monospace" }}>permit_reference</span>, <span style={{ fontFamily: "Courier New, monospace" }}>coordinates</span>.</p>
+        <p className="mb-1">
+          List responses include: total, limit, offset, records[].
+        </p>
+        <p className="mb-1">
+          Each record includes:{" "}
+          <span style={{ fontFamily: "Courier New, monospace" }}>site_id</span>,
+          plaza_name, location, survey_date, demolition_horizon, status,
+          classification, environmental_metrics, field_notes,{" "}
+          <span style={{ fontFamily: "Courier New, monospace" }}>
+            permit_reference
+          </span>
+          ,{" "}
+          <span style={{ fontFamily: "Courier New, monospace" }}>
+            coordinates
+          </span>
+          .
+        </p>
 
         <hr className="border-[#808080] my-4" />
 
@@ -163,9 +244,24 @@ export default function ApiAccess() {
         <hr className="border-[#808080] my-4" />
 
         <p className="font-bold mb-2">NOTES</p>
-        <p className="mb-1">Data reflects Broward County permit records and is updated daily.</p>
-        <p className="mb-1">Field assessments are documentary in nature and do not constitute official municipal records.</p>
-        <p className="mb-1">All data is read-only. No write access is available via this API.</p>
+        <p className="mb-1">
+          Data reflects Broward County permit records and is updated daily.
+        </p>
+        <p className="mb-1">
+          Coverage is currently limited to the City of Fort Lauderdale.
+        </p>
+        <p className="mb-1">
+          Survey reports are generated by a language model from public permit
+          and parcel records. Environmental metrics are inferred, not
+          field-measured.
+        </p>
+        <p className="mb-1">
+          Field assessments are documentary in nature and do not constitute
+          official municipal records.
+        </p>
+        <p className="mb-1">
+          All data is read-only. No write access is available via this API.
+        </p>
       </div>
     </div>
   );
