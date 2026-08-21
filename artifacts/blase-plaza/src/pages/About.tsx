@@ -51,8 +51,11 @@ export default function About() {
       <p className="mb-4">
         <strong>Status</strong>
         <br />
-        The plaza’s current condition and level of change, such as stable,
-        declining, renovated, partially vacant, or undergoing redevelopment.
+        The plaza’s standing in the archive, restated in plain terms from its
+        Horizon. Demolition Pending accompanies an IMMINENT horizon; Renovation
+        Pending a NEAR-TERM one; Declining a PROJECTED one; and
+        Post-Intervention an EXPIRED one, meaning the permitted work has been
+        completed or the permit has lapsed.
       </p>
 
       <p className="mb-4">
