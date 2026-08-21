@@ -76,8 +76,5 @@
     "vite": "catalog:",
     "wouter": "^3.3.5",
     "zod": "catalog:"
-  },
-  "dependencies": {
-    "@formspree/react": "^3.0.0"
   }
 }
