@@ -14,58 +14,76 @@ export default function About() {
       <hr className="my-6 border-black" />
 
       <h3 className="font-bold mb-2 text-base">MISSION STATEMENT</h3>
-      <p className="mb-4">
+      <p className="mb-6">
         The Blasé Plaza Archive is a database of strip malls and commercial
         plazas that are slated for demolition, redevelopment, or have otherwise
-        closed down.
+        closed down. As Broward County grows and zoning changes, these
+        properties are disappearing faster than they're being documented. They
+        represent a distinct era of commercial development — and a practical
+        record of how neighborhoods have changed — but most are torn down
+        without any systematic record being kept. This archive focuses on the
+        period just before demolition or renovation, when a site shows the most
+        information: which units are vacant, how signage and infrastructure have
+        degraded, how many tenants have turned over. For sites being renovated
+        rather than demolished, the archive tracks how physical changes
+        correlate with shifts in population, income, and the types of businesses
+        moving in — distinguishing between what's being updated and what's being
+        replaced entirely.
+      </p>
+
+      <h3 className="font-bold mb-2 text-base">GLOSSARY</h3>
+      <p className="mb-4">
+        Throughout this project, you will see the following terms used to
+        describe and compare each plaza. Together, they form a loose field
+        methodology for documenting Broward’s commercial landscape.
       </p>
 
       <p className="mb-4">
-        As the county grows and zoning changes, these properties are
-        disappearing faster than they're being documented. They represent a
-        distinct era of commercial development — and a practical record of how
-        neighborhoods have changed — but most are torn down without any
-        systematic record being kept.
+        <strong>Horizon</strong>
+        <br />
+        What surrounds the plaza and defines its visual boundary beyond the site
+        itself—from highways and residential neighborhoods to vegetation,
+        high-rises, and neighboring commercial development.
       </p>
 
       <p className="mb-4">
-        This archive focuses on the period just before demolition or renovation,
-        when a site shows the most information: which units are vacant, how
-        signage and infrastructure have degraded, how many tenants have turned
-        over. For sites being renovated rather than demolished, the archive
-        tracks how physical changes correlate with shifts in population, income,
-        and the types of businesses moving in — distinguishing between what's
-        being updated and what's being replaced entirely.
+        <strong>Status</strong>
+        <br />
+        The plaza’s current condition and level of change, such as stable,
+        declining, renovated, partially vacant, or undergoing redevelopment.
+      </p>
+
+      <p className="mb-4">
+        <strong>Classification</strong>
+        <br />
+        The plaza’s general type, based on recurring characteristics including
+        scale, layout, architecture, relationship to the road, and organization
+        of storefronts.
+      </p>
+
+      <p className="mb-4">
+        <strong>Metrical Assessment</strong>
+        <br />A standardized set of observational measures used to compare
+        plazas, including qualities such as parking entropy, shade coverage,
+        signage density, vacancy, and pedestrian activity. These are comparative
+        field observations rather than conventional scientific measurements.
+      </p>
+
+      <p className="mb-4">
+        <strong>Commercial Species Observed</strong>
+        <br />
+        The dominant types of businesses found within the plaza at the time of
+        observation. Businesses are treated as “species” within a larger
+        commercial ecosystem, allowing patterns to emerge across different
+        sites.
       </p>
 
       <p className="mb-6">
-        Each entry includes architectural details, construction date, current
-        occupancy, and ambient sound recordings. Everything is publicly
-        accessible through an interactive dashboard and updated as conditions
-        change.
-      </p>
-
-      <h3 className="font-bold mb-2 text-base">DATA COLLECTION METHODOLOGY</h3>
-      <p className="mb-4">
-        Field agents visit sites before demolition or renovation to record
-        specific conditions: parking lot deterioration, shade coverage
-        (artificial and natural), how much original signage is still up, and the
-        general state of the building.
-      </p>
-      <p className="mb-4">
-        For sites marked for renovation, census tract data is collected
-        alongside the physical notes and updated regularly. This includes
-        changes in local population, median household income, and what types of
-        businesses are moving in or out. Tracking both together makes it
-        possible to compare how a building's transformation maps onto changes in
-        the surrounding neighborhood over time.
-      </p>
-      <p className="mb-6">
-        Every record is dated and tagged with a site status at time of entry:
-        Demolition Pending, Renovation Pending, Declining, or Post-Intervention.
-        Records are never deleted — once a site is demolished or renovated, it
-        stays in the archive. A site that no longer exists is still a data
-        point.
+        <strong>Secondary Species</strong>
+        <br />
+        Businesses present within the plaza that are less prevalent or less
+        defining of its overall commercial character, but contribute to the
+        particular makeup of the site.
       </p>
 
       <hr className="my-6 border-black" />
