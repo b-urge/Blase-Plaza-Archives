@@ -28,6 +28,8 @@ export const surveysTable = pgTable("surveys", {
   permitNo: text("permit_no").notNull(),
   permitType: text("permit_type").notNull(),
   permitIssueDate: text("permit_issue_date").notNull(),
+  /** Real date behind permitIssueDate's display string, for sorting and filtering. */
+  permitDate: timestamp("permit_date"),
   documentRef: text("document_ref").notNull(),
   latitude: real("latitude"),
   longitude: real("longitude"),

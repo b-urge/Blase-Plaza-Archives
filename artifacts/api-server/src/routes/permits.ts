@@ -410,6 +410,10 @@ async function fetchPermitPage(
       issueDate: formatDate(
         (a.APPROVEDT as number | null) ?? (a.SUBMITDT as number | null),
       ),
+      issueDateEpoch:
+        (a.APPROVEDT as number | null) ??
+        (a.SUBMITDT as number | null) ??
+        undefined,
       workDescription,
       useClass,
       horizon: inferHorizon(permitType, status),
@@ -722,6 +726,7 @@ async function processPermit(
     permitNo: survey.permitNo,
     permitType: survey.permitType,
     permitIssueDate: survey.permitIssueDate,
+    permitDate: permit.issueDateEpoch ? new Date(permit.issueDateEpoch) : null,
     documentRef: survey.documentRef,
     latitude: geo?.lat ?? null,
     longitude: geo?.lng ?? null,

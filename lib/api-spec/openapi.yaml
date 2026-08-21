@@ -167,6 +167,11 @@ components:
           type: string
         permitIssueDate:
           type: string
+        permitDate:
+          type: string
+          format: date-time
+          nullable: true
+          description: Permit issue date as a real timestamp, for sorting and filtering.
         documentRef:
           type: string
         squareFootage:

@@ -50,6 +50,12 @@ export const GetSurveysResponseItem = zod.object({
   permitNo: zod.string(),
   permitType: zod.string(),
   permitIssueDate: zod.string(),
+  permitDate: zod.coerce
+    .date()
+    .nullish()
+    .describe(
+      "Permit issue date as a real timestamp, for sorting and filtering.",
+    ),
   documentRef: zod.string(),
   squareFootage: zod
     .number()
@@ -101,6 +107,12 @@ export const GetSurveyByIdResponse = zod.object({
   permitNo: zod.string(),
   permitType: zod.string(),
   permitIssueDate: zod.string(),
+  permitDate: zod.coerce
+    .date()
+    .nullish()
+    .describe(
+      "Permit issue date as a real timestamp, for sorting and filtering.",
+    ),
   documentRef: zod.string(),
   squareFootage: zod
     .number()

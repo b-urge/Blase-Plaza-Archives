@@ -25,6 +25,8 @@ export interface Survey {
   permitNo: string;
   permitType: string;
   permitIssueDate: string;
+  /** Permit issue date as a real timestamp, for sorting and filtering. */
+  permitDate?: Date | null;
   documentRef: string;
   /** Building area in square feet, from the Broward County Property Appraiser. */
   squareFootage?: number | null;

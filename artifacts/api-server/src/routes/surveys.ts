@@ -109,7 +109,7 @@ router.get("/surveys", async (req, res) => {
       // survey_date is text like "December 2023", so a plain sort orders it
       // alphabetically by month name. Parse it to a real date instead, and
       // tolerate values that are not in that shape.
-      const parsed = sql`CASE WHEN ${surveysTable.surveyDate} ~ '^[A-Za-z]+ [0-9]{4}$' THEN to_date(${surveysTable.surveyDate}, 'Month YYYY') END`;
+      const parsed = sql`COALESCE(${surveysTable.permitDate}::date, CASE WHEN ${surveysTable.surveyDate} ~ '^[A-Za-z]+ [0-9]{4}$' THEN to_date(${surveysTable.surveyDate}, 'Month YYYY') END)`;
       query = query.orderBy(
         descending
           ? sql`${parsed} DESC NULLS LAST`

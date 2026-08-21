@@ -51,6 +51,35 @@ export default function About() {
         replaced entirely.
       </p>
 
+      <h3 className="font-bold mb-2 text-base">METHOD</h3>
+      <p className="mb-4">
+        Every plaza enters the archive as a machine-written record, drafted from
+        public permit and parcel data. That first pass is an informed
+        reconstruction rather than an observation — it can establish what a 1960
+        building zoned B-1 on Federal Highway probably is, but not that half its
+        units are papered over or that its sign still carries a business closed
+        since 2019.
+      </p>
+      <p className="mb-4">
+        Site visits are what turn a plausible record into a documented one:
+        confirming or correcting what the permit data implied, photographing the
+        plaza, counting the vacancies, and recording the commercial species
+        actually present. The automation makes a survey of this size possible at
+        all; the fieldwork is what makes it true. Until a site has been visited,
+        its report marks the environmental metrics as inferred.
+      </p>
+      <p className="mb-6">
+        Source code, data sources, and full methodology:{" "}
+        <a
+          href="https://github.com/b-urge/Blase-Plaza-Archives"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline"
+        >
+          github.com/b-urge/Blase-Plaza-Archives
+        </a>
+      </p>
+
       <h3 className="font-bold mb-2 text-base">GLOSSARY</h3>
       <p className="mb-4">
         Throughout this project, you will see the following terms used to

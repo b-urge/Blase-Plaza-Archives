@@ -6,6 +6,8 @@ export interface PermitRecord {
   permitNo: string;
   permitType: string;
   issueDate: string;
+  /** Epoch ms behind issueDate, when the source publishes one. */
+  issueDateEpoch?: number;
   workDescription?: string;
   squareFootage?: number;
   zoningCode?: string;
