@@ -112,7 +112,7 @@ export const GetSurveyStatsResponse = zod.object({
 });
 
 /**
- * @summary Trigger permit data sync from Miami-Dade APIs
+ * @summary Trigger permit data sync from Broward County APIs
  */
 export const SyncPermitsResponse = zod.object({
   success: zod.boolean(),

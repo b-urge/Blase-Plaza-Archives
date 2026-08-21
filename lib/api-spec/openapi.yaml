@@ -100,7 +100,7 @@ paths:
     post:
       operationId: syncPermits
       tags: [permits]
-      summary: Trigger permit data sync from Miami-Dade APIs
+      summary: Trigger permit data sync from Broward County APIs
       responses:
         "200":
           description: Sync result

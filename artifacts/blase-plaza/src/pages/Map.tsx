@@ -19,8 +19,8 @@ export default function MapView() {
         <div className="flex-1 win98-window-inset border-2 border-[#808080] relative z-0 p-1 bg-white">
           <div className="w-full h-full border-2 border-[#808080] border-t-[#000] border-l-[#000] overflow-hidden">
             <MapContainer 
-              center={[25.7617, -80.1918]} 
-              zoom={10} 
+              center={[26.1224, -80.1373]} 
+              zoom={11} 
               style={{ height: "100%", width: "100%", zIndex: 1 }}
             >
               <TileLayer

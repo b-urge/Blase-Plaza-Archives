@@ -367,7 +367,7 @@ export function useGetSurveyStats<
 }
 
 /**
- * @summary Trigger permit data sync from Miami-Dade APIs
+ * @summary Trigger permit data sync from Broward County APIs
  */
 export const getSyncPermitsUrl = () => {
   return `/api/permits/sync`;
@@ -425,7 +425,7 @@ export type SyncPermitsMutationResult = NonNullable<
 export type SyncPermitsMutationError = ErrorType<unknown>;
 
 /**
- * @summary Trigger permit data sync from Miami-Dade APIs
+ * @summary Trigger permit data sync from Broward County APIs
  */
 export const useSyncPermits = <
   TError = ErrorType<unknown>,

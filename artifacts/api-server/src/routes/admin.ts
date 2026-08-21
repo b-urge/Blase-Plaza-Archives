@@ -7,7 +7,7 @@ import {
 } from "express";
 import { db } from "@workspace/db";
 import { surveysTable } from "@workspace/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, notLike, count } from "drizzle-orm";
 import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
@@ -148,6 +148,103 @@ router.post("/admin/approve-all", adminAuth, async (req, res) => {
   }
 });
 
+/**
+ * Every Broward-era record has a location ending in "Broward County, Florida"
+ * (built in routes/permits.ts). Anything else is a legacy Miami-Dade survey from
+ * before the county pivot, so this pattern identifies legacy rows without
+ * depending on the exact old wording.
+ */
+const BROWARD_LOCATION_PATTERN = "%Broward County, Florida";
+
+function legacyFilter() {
+  return notLike(surveysTable.location, BROWARD_LOCATION_PATTERN);
+}
+
+/** Preview which records are legacy (non-Broward) without deleting anything. */
+router.get("/admin/legacy", adminAuth, async (req, res) => {
+  try {
+    const rows = await db
+      .select({
+        id: surveysTable.id,
+        siteId: surveysTable.siteId,
+        plazaName: surveysTable.plazaName,
+        location: surveysTable.location,
+        sourceCity: surveysTable.sourceCity,
+      })
+      .from(surveysTable)
+      .where(legacyFilter());
+
+    const [{ value: total }] = await db
+      .select({ value: count() })
+      .from(surveysTable);
+
+    res.json({
+      legacyCount: rows.length,
+      totalCount: total,
+      wouldRemain: total - rows.length,
+      surveys: rows,
+    });
+  } catch (err) {
+    logger.error({ err }, "Failed to list legacy surveys");
+    res.status(500).json({ error: "Failed to list legacy surveys" });
+  }
+});
+
+/**
+ * Delete legacy (pre-pivot, non-Broward) surveys.
+ *
+ * Dry run by default — pass ?confirm=true to actually delete. This is
+ * destructive and irreversible, so the default is deliberately a no-op.
+ */
+router.post("/admin/purge-legacy", adminAuth, async (req, res) => {
+  try {
+    const confirmed = req.query.confirm === "true";
+
+    const doomed = await db
+      .select({
+        id: surveysTable.id,
+        plazaName: surveysTable.plazaName,
+        location: surveysTable.location,
+      })
+      .from(surveysTable)
+      .where(legacyFilter());
+
+    if (!confirmed) {
+      res.json({
+        dryRun: true,
+        wouldDelete: doomed.length,
+        message: `Dry run: ${doomed.length} legacy survey(s) would be deleted. Re-send with ?confirm=true to proceed.`,
+        samples: doomed.slice(0, 10),
+      });
+      return;
+    }
+
+    if (doomed.length === 0) {
+      res.json({
+        success: true,
+        deleted: 0,
+        message: "No legacy surveys found. Nothing to delete.",
+      });
+      return;
+    }
+
+    await db.delete(surveysTable).where(legacyFilter());
+    logger.warn(
+      { deleted: doomed.length },
+      "Purged legacy non-Broward surveys",
+    );
+
+    res.json({
+      success: true,
+      deleted: doomed.length,
+      message: `Deleted ${doomed.length} legacy survey(s). Run POST /api/permits/sync to repopulate from Broward County permit data.`,
+    });
+  } catch (err) {
+    logger.error({ err }, "Failed to purge legacy surveys");
+    res.status(500).json({ error: "Failed to purge legacy surveys" });
+  }
+});
+
 router.get("/admin", async (req, res) => {
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -164,6 +261,7 @@ router.get("/admin", async (req, res) => {
     .btn-approve { background: none; border: 1px solid #4a7a4a; color: #6aaa6a; padding: 0.25rem 0.6rem; cursor: pointer; font-family: monospace; margin-right: 0.4rem; }
     .btn-reject { background: none; border: 1px solid #7a4a4a; color: #aa6a6a; padding: 0.25rem 0.6rem; cursor: pointer; font-family: monospace; }
     .btn-bulk { background: none; border: 1px solid #888; color: #aaa; padding: 0.4rem 1rem; cursor: pointer; font-family: monospace; margin-right: 0.5rem; margin-bottom: 1rem; }
+    .btn-danger { border-color: #7a4a4a; color: #aa6a6a; }
     .msg { color: #6aaa6a; margin-top: 1rem; font-size: 0.8rem; min-height: 1.2em; }
     #loading { color: #888; }
     #content { display: none; }
@@ -177,6 +275,7 @@ router.get("/admin", async (req, res) => {
       <button class="btn-bulk" onclick="approveAll()">✓ Approve All</button>
       <button class="btn-bulk" onclick="load()">↺ Refresh</button>
       <button class="btn-bulk" onclick="triggerSync()">⟳ Trigger Sync</button>
+      <button class="btn-bulk btn-danger" onclick="purgeLegacy()">⌫ Purge Legacy (non-Broward)</button>
     </div>
     <div id="count" style="color:#888;font-size:0.85rem;margin-bottom:1rem;"></div>
     <table>
@@ -236,6 +335,26 @@ router.get("/admin", async (req, res) => {
     async function approveAll() {
       if (!confirm("Approve all pending entries?")) return;
       const d = await api("POST", "/api/admin/approve-all");
+      document.getElementById("msg").textContent = d.message ?? d.error;
+      load();
+    }
+
+    async function purgeLegacy() {
+      // Always dry-run first so the operator sees exactly what will be destroyed.
+      const preview = await api("POST", "/api/admin/purge-legacy");
+      if (preview.error) { document.getElementById("msg").textContent = preview.error; return; }
+      if (!preview.wouldDelete) {
+        document.getElementById("msg").textContent = "No legacy (non-Broward) surveys found.";
+        return;
+      }
+      const sample = (preview.samples || []).map(function (x) { return "  • " + x.location; }).join("\n");
+      const ok = confirm(
+        "PERMANENTLY DELETE " + preview.wouldDelete + " legacy (non-Broward) survey(s)?\n\n" +
+        sample + (preview.wouldDelete > (preview.samples || []).length ? "\n  ..." : "") +
+        "\n\nThis cannot be undone."
+      );
+      if (!ok) return;
+      const d = await api("POST", "/api/admin/purge-legacy?confirm=true");
       document.getElementById("msg").textContent = d.message ?? d.error;
       load();
     }

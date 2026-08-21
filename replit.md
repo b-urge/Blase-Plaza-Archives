@@ -2,7 +2,7 @@
 
 ## Overview
 
-A full-stack web application that documents commercial plazas in Miami-Dade County scheduled for demolition or major renovation. Styled as a deliberate 1990s county government website aesthetic (Windows 98 grey, dark navy headers, beveled buttons, Courier New typewriter reports).
+A full-stack web application that documents commercial plazas in Broward County, Florida scheduled for demolition or major renovation. Styled as a deliberate 1990s county government website aesthetic (Windows 98 grey, dark navy headers, beveled buttons, Courier New typewriter reports).
 
 ## Stack
 
@@ -38,7 +38,7 @@ artifacts-monorepo/
 
 ## Features
 
-- **Map View** (`/map`): Leaflet.js interactive map of Miami-Dade with colored pins by demolition horizon (Red=IMMINENT, Amber=NEAR-TERM, Yellow=PROJECTED, Grey=EXPIRED)
+- **Map View** (`/map`): Leaflet.js interactive map of Broward County with colored pins by demolition horizon (Red=IMMINENT, Amber=NEAR-TERM, Yellow=PROJECTED, Grey=EXPIRED)
 - **List View** (`/list`): Sortable HTML-style table with search/filter controls
 - **Report Card View** (`/report/:id`): Full typewritten survey report in Courier New with government form styling
 - **About** (`/about`): Static archival description page
@@ -46,9 +46,16 @@ artifacts-monorepo/
 
 ## Data Sources
 
-- Miami-Dade Open Data (Socrata): `https://opendata.miamidade.gov/resource/rbng-6mha.json`
-- Fallback: 6 pre-defined sample addresses from Miami-Dade commercial corridors
-- Geocoding: OpenStreetMap Nominatim
+- **Primary**: City of Fort Lauderdale Building Permit Tracker (ArcGIS REST) —
+  `https://gis.fortlauderdale.gov/arcgis/rest/services/BuildingPermitTracker/BuildingPermitTracker/MapServer/0/query`
+  Filtered to `PERMITDESC IN ('Commercial Demolition Permit','Commercial Alteration Permit')`,
+  excluding void/withdrawn/expired statuses, submitted 2023-01-01 or later.
+- Broward County publishes **no countywide permit API** — permitting is delegated to its 31
+  municipalities and the county portal (`dpepp.broward.org/BCS`) is a server-rendered form with
+  no machine interface. Fort Lauderdale is the only Broward city with a public structured feed.
+  `CITY_SOURCES` in `routes/permits.ts` is an array so more cities can be added.
+- Fallback: 6 real Broward commercial addresses (genuine permit numbers, dates, coordinates)
+- Geocoding: permit point geometry (WGS84) from the feed; OpenStreetMap Nominatim as fallback
 
 ## AI Survey Generation
 
@@ -68,8 +75,18 @@ Each permit record generates a full structured survey via Claude `claude-sonnet-
 - `GET /api/surveys/stats` — totals by horizon
 - `GET /api/surveys/:id` — single survey
 - `POST /api/permits/seed` — seed 6 sample surveys using Claude
-- `POST /api/permits/sync` — sync from Miami-Dade API (falls back to seed if API unreachable)
+- `POST /api/permits/sync` — sync from Broward County permit API (falls back to seed if API unreachable)
 - `GET /api/healthz` — health check
+
+## Admin Routes (require `Authorization: Bearer $ADMIN_PASSWORD`)
+
+- `GET /api/admin` — review queue UI
+- `GET /api/admin/pending` — entries awaiting review
+- `POST /api/admin/approve/:id` / `POST /api/admin/reject/:id` / `POST /api/admin/approve-all`
+- `GET /api/admin/legacy` — preview surveys that are **not** Broward County records
+- `POST /api/admin/purge-legacy` — dry run by default; add `?confirm=true` to delete.
+  Removes pre-pivot Miami-Dade rows by matching any `location` not ending in
+  "Broward County, Florida". Destructive and irreversible.
 
 ## First-Run Setup
 

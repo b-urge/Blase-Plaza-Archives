@@ -5,15 +5,19 @@ export interface GeoResult {
   lng: number;
 }
 
-export async function geocodeAddress(address: string): Promise<GeoResult | null> {
+export async function geocodeAddress(
+  address: string,
+): Promise<GeoResult | null> {
   try {
-    const encoded = encodeURIComponent(address + ", Miami-Dade County, Florida");
+    const encoded = encodeURIComponent(address + ", Broward County, Florida");
     const url = `https://nominatim.openstreetmap.org/search?q=${encoded}&format=json&limit=1`;
     const resp = await fetch(url, {
-      headers: { "User-Agent": "BlasePlazaArchives/1.0 (miami-dade-survey-database)" },
+      headers: {
+        "User-Agent": "BlasePlazaArchives/1.0 (broward-county-survey-database)",
+      },
     });
     if (!resp.ok) return null;
-    const data = await resp.json() as Array<{ lat: string; lon: string }>;
+    const data = (await resp.json()) as Array<{ lat: string; lon: string }>;
     if (!data || data.length === 0) return null;
     return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
   } catch (err) {

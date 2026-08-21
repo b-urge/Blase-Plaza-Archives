@@ -9,6 +9,11 @@ export interface PermitRecord {
   workDescription?: string;
   squareFootage?: number;
   zoningCode?: string;
+  /** Property use classification from the county permit feed, when published. */
+  useClass?: string;
+  /** Point geometry from the permit feed, when published (WGS84). */
+  latitude?: number;
+  longitude?: number;
   horizon: "IMMINENT" | "NEAR-TERM" | "PROJECTED";
 }
 
@@ -62,29 +67,38 @@ function pad2(n: number): string {
 }
 
 function randomDigits(n: number): string {
-  return Array.from({ length: n }, () => Math.floor(Math.random() * 10)).join("");
+  return Array.from({ length: n }, () => Math.floor(Math.random() * 10)).join(
+    "",
+  );
 }
 
-const SYSTEM_PROMPT = `You are a field surveyor for Blasé Plaza Archives, a project that documents commercial plazas and strip malls in Miami-Dade County before they are demolished or renovated. You write neutral, observational, bureaucratic survey reports. Your tone is dry, precise, and documentary. Never use humor or editorial commentary. Infer the likely commercial character of each plaza from its address, square footage, zoning classification, and Miami-Dade neighborhood context. All bullet points must use the literal • character on their own line. Never use <ul>, <li>, or markdown lists.`;
+const SYSTEM_PROMPT = `You are a field surveyor for Blasé Plaza Archives, a project that documents commercial plazas and strip malls in Broward County, Florida before they are demolished or renovated. You write neutral, observational, bureaucratic survey reports. Your tone is dry, precise, and documentary. Never use humor or editorial commentary. Infer the likely commercial character of each plaza from its address, square footage, use classification, and Broward County neighborhood context. All bullet points must use the literal • character on their own line. Never use <ul>, <li>, or markdown lists.`;
 
-export async function generateSurvey(permit: PermitRecord, siteNum: number): Promise<SurveyEntry> {
+export async function generateSurvey(
+  permit: PermitRecord,
+  siteNum: number,
+): Promise<SurveyEntry> {
   const siteId = pad2(siteNum);
   const documentRef = `BPA-2026-${siteId}-${randomDigits(4)}`;
   const plazaType = randomFrom(PLAZA_TYPES);
   const archStyle = randomFrom(ARCH_STYLES);
 
-  const sqft = permit.squareFootage ? `${permit.squareFootage.toLocaleString()} sq ft` : "unknown square footage";
+  const sqft = permit.squareFootage
+    ? `${permit.squareFootage.toLocaleString()} sq ft`
+    : "unknown square footage";
   const zoning = permit.zoningCode ?? "unspecified zoning classification";
+  const useClass = permit.useClass ?? "unspecified use classification";
 
   const userPrompt = `Generate a survey entry for the following permit record:
 
-Address: ${permit.address}, Miami-Dade County, Florida
+Address: ${permit.address}, Broward County, Florida
 Permit Number: ${permit.permitNo}
 Permit Type: ${permit.permitType}
 Issue Date: ${permit.issueDate}
 Work Description: ${permit.workDescription ?? "Not specified"}
 Square Footage: ${sqft}
 Zoning: ${zoning}
+Use Classification: ${useClass}
 Demolition Horizon: ${permit.horizon}
 Plaza Type: ${plazaType}
 Architectural Style: ${archStyle}
@@ -100,7 +114,7 @@ BLASÉ PLAZA ARCHIVES
 
 SITE ID: ${siteId}
 PLAZA NAME: [derive from address, business name, or neighborhood — a plausible local name]
-LOCATION: ${permit.address}, Miami-Dade County, Florida
+LOCATION: ${permit.address}, Broward County, Florida
 SURVEY DATE: [month and year of the permit issue date, e.g. "March 2024"]
 DEMOLITION HORIZON: ${permit.horizon}
 
@@ -127,7 +141,7 @@ Secondary Species
 • [business type 3]
 
 FIELD NOTES
-[One paragraph, 3-5 sentences. Neutral, observational, bureaucratic tone. Describe the physical structure, parking situation, signage, and commercial character based on the address, square footage, zoning, and Miami-Dade neighborhood context. No humor. No commentary. Dry and precise.]
+[One paragraph, 3-5 sentences. Neutral, observational, bureaucratic tone. Describe the physical structure, parking situation, signage, and commercial character based on the address, square footage, use classification, and Broward County neighborhood context. No humor. No commentary. Dry and precise.]
 
 PERMIT REFERENCE
 Permit No.: ${permit.permitNo}
@@ -150,13 +164,14 @@ Document Ref.: ${documentRef}`;
     return match ? match[1].trim() : "";
   };
 
-  const plazaName = extractLine("PLAZA NAME") || `${permit.address.split(",")[0]} Commercial`;
+  const plazaName =
+    extractLine("PLAZA NAME") || `${permit.address.split(",")[0]} Commercial`;
   const surveyDate = extractLine("SURVEY DATE") || permit.issueDate;
 
   return {
     siteId,
     plazaName,
-    location: `${permit.address}, Miami-Dade County, Florida`,
+    location: `${permit.address}, Broward County, Florida`,
     surveyDate,
     demolitionHorizon: permit.horizon,
     plazaType,

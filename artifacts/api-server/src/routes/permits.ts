@@ -8,8 +8,74 @@ import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
 
-const ARCGIS_BASE =
-  "https://gis-mdc.opendata.arcgis.com/datasets/MDC::building-permit.geojson";
+/**
+ * Broward County permit data source.
+ *
+ * Broward County itself does not publish a countywide permit API — permitting is
+ * delegated to its 31 municipalities, and the county's own permit portal
+ * (dpepp.broward.org/BCS) is a server-rendered ASP.NET form with no machine
+ * interface. The City of Fort Lauderdale's ArcGIS "Building Permit Tracker" is
+ * the only public, structured, actively-maintained permit feed in the county.
+ *
+ * CITY_SOURCES is kept as an array so additional Broward municipalities can be
+ * appended as they publish open permit endpoints.
+ */
+const FTL_PERMITS_QUERY =
+  "https://gis.fortlauderdale.gov/arcgis/rest/services/BuildingPermitTracker/BuildingPermitTracker/MapServer/0/query";
+
+/** PERMITDESC is a controlled vocabulary; these are the commercial demo/reno values. */
+const COMMERCIAL_DEMO_DESC = "Commercial Demolition Permit";
+const COMMERCIAL_RENO_DESC = "Commercial Alteration Permit";
+
+/** Permit states that mean the work will never happen — excluded from the sync. */
+const DEAD_STATUSES = [
+  "Void",
+  "Withdrawn",
+  "Purged",
+  "Expired",
+  "Disapproved",
+  "CLOSED (2019 HB 447)",
+];
+
+/** Permit states that mean work is pending or underway (vs. already finished). */
+const IN_PROGRESS_STATUSES = new Set([
+  "About to Expire",
+  "Approved for Inspections",
+  "Approved to Call Inspection",
+  "Awaiting Permit Issuance",
+  "Corrections Received",
+  "Corrections Required",
+  "In Process",
+  "In Review",
+  "Issuance Fees Paid",
+  "Issued",
+  "Open",
+  "Pending",
+  "Pending Plan Approval",
+  "Plan Set Submitted",
+  "Revision Issued",
+  "Revision Submitted",
+]);
+
+/**
+ * USECLASS values that indicate a plaza / strip-retail property — the archive's
+ * actual subject. Used to prioritise records, not to exclude them (the field is
+ * only populated on a minority of permits).
+ */
+const PLAZA_USE_CLASSES = new Set([
+  "STRIP SHOPPING CTR",
+  "RETAIL BUSINESS",
+  "SUPERMARKET",
+  "OFFICES W/ RETAIL",
+  "GAS STA/RETAIL",
+  "MULTI USE",
+  "DRIV-THRU RESTAURANT",
+  "RESTAURANT",
+  "RESTAURANT TAKE OUT",
+  "RESTAURANT/LOUNGE",
+  "BARBER/BEAUTY SHOP",
+  "AUTO SERVICE/REPAIR",
+]);
 
 interface CitySource {
   name: string;
@@ -18,125 +84,224 @@ interface CitySource {
 
 function inferHorizon(
   permitType: string,
-  workDesc: string,
+  permitStatus: string,
 ): "IMMINENT" | "NEAR-TERM" | "PROJECTED" {
-  const type = permitType.toUpperCase();
-  const desc = workDesc.toUpperCase();
-  if (type === "DEMOLITION") return "IMMINENT";
-  if (desc.includes("TOTAL DEMOLITION") || desc.includes("DEMOLISH"))
-    return "NEAR-TERM";
-  if (desc.includes("REDEVELOPMENT") || desc.includes("REBUILD"))
-    return "NEAR-TERM";
+  if (permitType === "DEMOLITION") return "IMMINENT";
+  if (IN_PROGRESS_STATUSES.has(permitStatus)) return "NEAR-TERM";
   return "PROJECTED";
 }
 
-function formatDate(dateStr: string): string {
+function formatDate(epochMs: number | null | undefined): string {
+  if (!epochMs) return "Unknown";
   try {
-    return new Date(dateStr).toLocaleDateString("en-US", {
+    return new Date(epochMs).toLocaleDateString("en-US", {
       month: "long",
       year: "numeric",
+      timeZone: "UTC",
     });
   } catch {
-    return dateStr;
+    return "Unknown";
   }
 }
 
-async function safeFetch(url: string, timeoutMs = 12000): Promise<Response> {
+/**
+ * Strip unit/suite suffixes ("1201 NW 62 ST #101" -> "1201 NW 62 ST").
+ * The archive documents plazas, not individual tenant bays, so unit-level
+ * permits at one address should collapse into a single site record.
+ */
+function normalizeAddress(addr: string): string {
+  return addr
+    .split("#")[0]
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/[,\s]+$/, "");
+}
+
+async function safeFetch(url: string, timeoutMs = 20000): Promise<Response> {
   return fetch(url, { signal: AbortSignal.timeout(timeoutMs) });
+}
+
+interface ArcGisFeature {
+  attributes: Record<string, string | number | null>;
+  geometry?: { x: number; y: number };
 }
 
 const CITY_SOURCES: CitySource[] = [
   {
-    name: "Miami-Dade County (ArcGIS)",
+    name: "Fort Lauderdale (Broward County ArcGIS)",
     fetch: async () => {
       const results: PermitRecord[] = [];
       try {
-        const where = `RESCOMM='C' AND (TYPE='DEMO' OR FFRMLINE LIKE '%DEMOLIT%' OR FFRMLINE LIKE '%RENOVATION%' OR FFRMLINE LIKE '%REDEVELOP%')`;
-        const url = `${ARCGIS_BASE}?where=${encodeURIComponent(where)}&resultRecordCount=100`;
-        const resp = await safeFetch(url);
-        if (!resp.ok) return results;
-        const data = await resp.json();
+        const deadList = DEAD_STATUSES.map((s) => `'${s}'`).join(",");
+        const where = [
+          `PERMITDESC IN ('${COMMERCIAL_DEMO_DESC}','${COMMERCIAL_RENO_DESC}')`,
+          `PERMITSTAT NOT IN (${deadList})`,
+          `SUBMITDT >= DATE '2023-01-01'`,
+        ].join(" AND ");
+
+        const params = new URLSearchParams({
+          where,
+          outFields:
+            "CASEKEY,PERMITID,PERMITDESC,PERMITSTAT,SUBMITDT,APPROVEDT,FULLADDR,USECLASS,OWNERNAME",
+          orderByFields: "SUBMITDT DESC",
+          resultRecordCount: "100",
+          returnGeometry: "true",
+          outSR: "4326",
+          f: "json",
+        });
+
+        const resp = await safeFetch(`${FTL_PERMITS_QUERY}?${params}`);
+        if (!resp.ok) {
+          logger.warn(
+            { status: resp.status },
+            "Broward permit API returned non-OK",
+          );
+          return results;
+        }
+
+        const data = (await resp.json()) as {
+          features?: ArcGisFeature[];
+          error?: { message?: string };
+        };
+
+        if (data.error) {
+          logger.warn(
+            { error: data.error },
+            "Broward permit API returned an error",
+          );
+          return results;
+        }
         if (!data.features) return results;
 
+        const seen = new Set<string>();
+
         for (const feature of data.features) {
-          const p = feature.properties;
-          const addr = (p.ADDRESS ?? "").trim();
-          if (!addr) continue;
-          const desc = (p.FFRMLINE ?? "").trim();
-          const permitType = (p.TYPE ?? "BLDG").toUpperCase();
-          const issueDate = p.ISSUDATE ? formatDate(p.ISSUDATE) : "Unknown";
+          const a = feature.attributes;
+          const rawAddr = String(a.FULLADDR ?? "").trim();
+          if (!rawAddr) continue;
+
+          const address = normalizeAddress(rawAddr);
+          if (!address) continue;
+
+          // Collapse unit-level duplicates within a single sync batch.
+          if (seen.has(address)) continue;
+          seen.add(address);
+
+          const desc = String(a.PERMITDESC ?? "");
+          const status = String(a.PERMITSTAT ?? "");
+          const useClass = a.USECLASS ? String(a.USECLASS).trim() : undefined;
+          const permitType =
+            desc === COMMERCIAL_DEMO_DESC ? "DEMOLITION" : "BUILDING";
+
+          const workDescription = [
+            desc === COMMERCIAL_DEMO_DESC
+              ? "COMMERCIAL DEMOLITION"
+              : "COMMERCIAL ALTERATION / RENOVATION",
+            useClass ? `USE CLASS: ${useClass}` : null,
+            status ? `PERMIT STATUS: ${status.toUpperCase()}` : null,
+          ]
+            .filter(Boolean)
+            .join(" — ");
 
           results.push({
-            address: `${addr}, Miami-Dade County, FL`,
-            permitNo: p.PROCNUM ?? `MDC-${p.OBJECTID}`,
-            permitType: permitType === "DEMO" ? "DEMOLITION" : "BUILDING",
-            issueDate,
-            workDescription: desc,
-            horizon: inferHorizon(
-              permitType === "DEMO" ? "DEMOLITION" : "BUILDING",
-              desc,
+            address: `${address}, Fort Lauderdale`,
+            permitNo: String(a.CASEKEY ?? a.PERMITID ?? "UNKNOWN"),
+            permitType,
+            issueDate: formatDate(
+              (a.APPROVEDT as number | null) ?? (a.SUBMITDT as number | null),
             ),
+            workDescription,
+            useClass,
+            horizon: inferHorizon(permitType, status),
+            latitude: feature.geometry?.y,
+            longitude: feature.geometry?.x,
           });
         }
+
+        // Surface plaza/strip-retail properties first — they are the archive's subject.
+        results.sort((x, y) => {
+          const px = x.useClass && PLAZA_USE_CLASSES.has(x.useClass) ? 0 : 1;
+          const py = y.useClass && PLAZA_USE_CLASSES.has(y.useClass) ? 0 : 1;
+          return px - py;
+        });
       } catch (err) {
-        logger.warn({ err }, "ArcGIS fetch failed");
+        logger.warn({ err }, "Broward permit API fetch failed");
       }
       return results;
     },
   },
 ];
 
+/**
+ * Real Broward County commercial addresses with active demolition or renovation
+ * permits, retrieved from the Fort Lauderdale permit API. Permit numbers, dates
+ * and coordinates are genuine source records. Used only to seed an empty
+ * database or when the live API is unreachable.
+ */
 const SAMPLE_PERMITS: PermitRecord[] = [
   {
-    address: "8300 SW 8th St, Miami, FL",
-    permitNo: "B-2024-001234",
+    address: "3950 N FEDERAL HWY, Fort Lauderdale",
+    permitNo: "24CAP-00000-01KRQ",
     permitType: "DEMOLITION",
-    issueDate: "January 2024",
-    workDescription: "TOTAL DEMOLITION OF EXISTING COMMERCIAL STRUCTURE",
-    squareFootage: 12400,
-    zoningCode: "BU-1A",
+    issueDate: "November 2024",
+    workDescription: "COMMERCIAL DEMOLITION — PERMIT STATUS: COMPLETE",
     horizon: "IMMINENT",
+    latitude: 26.17738,
+    longitude: -80.11912,
   },
   {
-    address: "1450 W 49th St, Hialeah, FL",
-    permitNo: "B-2024-002891",
-    permitType: "BUILDING",
-    issueDate: "March 2024",
-    workDescription:
-      "REDEVELOPMENT OF EXISTING MERCANTILE PLAZA - TOTAL DEMOLITION AND REBUILD",
-    squareFootage: 8750,
-    zoningCode: "C-1",
-    horizon: "NEAR-TERM",
-  },
-  {
-    address: "3190 W Flagler St, Miami, FL",
-    permitNo: "B-2023-009341",
-    permitType: "BUILDING",
-    issueDate: "November 2023",
-    workDescription: "MAJOR RENOVATION AND PARTIAL DEMOLITION OF RETAIL STRIP",
-    squareFootage: 15200,
-    zoningCode: "BU-2",
-    horizon: "NEAR-TERM",
-  },
-  {
-    address: "27180 S Dixie Hwy, Naranja, FL",
-    permitNo: "B-2023-008841",
+    address: "1924 E SUNRISE BLVD, Fort Lauderdale",
+    permitNo: "23CAP-00000-01BJM",
     permitType: "DEMOLITION",
-    issueDate: "October 2023",
-    workDescription: "TOTAL DEMOLITION OF EXISTING COMMERCIAL PLAZA STRUCTURE",
-    squareFootage: 18600,
-    zoningCode: "BU-1A",
-    horizon: "NEAR-TERM",
+    issueDate: "December 2023",
+    workDescription: "COMMERCIAL DEMOLITION — PERMIT STATUS: ISSUED",
+    horizon: "IMMINENT",
+    latitude: 26.13648,
+    longitude: -80.1208,
   },
   {
-    address: "12101 SW 152nd St, Miami, FL",
-    permitNo: "B-2024-004782",
+    address: "2775 E OAKLAND PARK BLVD, Fort Lauderdale",
+    permitNo: "24CAP-00000-000YJ",
     permitType: "BUILDING",
-    issueDate: "June 2024",
-    workDescription: "RENOVATION OF EXISTING RETAIL COMPLEX",
-    squareFootage: 9800,
-    zoningCode: "BU-1A",
+    issueDate: "January 2024",
+    workDescription:
+      "COMMERCIAL ALTERATION / RENOVATION — PERMIT STATUS: COMPLETE",
+    horizon: "NEAR-TERM",
+    latitude: 26.1678,
+    longitude: -80.10935,
+  },
+  {
+    address: "6550 N FEDERAL HWY, Fort Lauderdale",
+    permitNo: "23CAP-00000-01DDR",
+    permitType: "BUILDING",
+    issueDate: "December 2023",
+    workDescription:
+      "COMMERCIAL ALTERATION / RENOVATION — PERMIT STATUS: CORRECTIONS RECEIVED",
+    horizon: "NEAR-TERM",
+    latitude: 26.20826,
+    longitude: -80.10697,
+  },
+  {
+    address: "3079 E COMMERCIAL BLVD, Fort Lauderdale",
+    permitNo: "23CAP-00000-01E2X",
+    permitType: "BUILDING",
+    issueDate: "December 2023",
+    workDescription:
+      "COMMERCIAL ALTERATION / RENOVATION — PERMIT STATUS: COMPLETE",
     horizon: "PROJECTED",
+    latitude: 26.19038,
+    longitude: -80.10475,
+  },
+  {
+    address: "945 W SUNRISE BLVD, Fort Lauderdale",
+    permitNo: "23CAP-00000-01D8S",
+    permitType: "BUILDING",
+    issueDate: "December 2023",
+    workDescription:
+      "COMMERCIAL ALTERATION / RENOVATION — PERMIT STATUS: COMPLETE",
+    horizon: "PROJECTED",
+    latitude: 26.13693,
+    longitude: -80.15545,
   },
 ];
 
@@ -152,7 +317,7 @@ async function getNextSiteNum(): Promise<number> {
 }
 
 async function locationExists(address: string): Promise<boolean> {
-  const fullLocation = `${address}, Miami-Dade County, Florida`;
+  const fullLocation = `${address}, Broward County, Florida`;
   const rows = await db
     .select({ id: surveysTable.id })
     .from(surveysTable)
@@ -174,7 +339,13 @@ async function processPermit(
   }
 
   const survey = await generateSurvey(permit, siteNum);
-  const geo = await geocodeAddress(permit.address);
+
+  // The Broward permit feed ships point geometry, so only fall back to the
+  // Nominatim geocoder for records that arrive without coordinates.
+  const geo =
+    permit.latitude != null && permit.longitude != null
+      ? { lat: permit.latitude, lng: permit.longitude }
+      : await geocodeAddress(permit.address);
 
   const derivedStatus =
     permit.horizon === "IMMINENT"
@@ -188,7 +359,7 @@ async function processPermit(
   await db.insert(surveysTable).values({
     siteId: survey.siteId,
     plazaName: survey.plazaName,
-    location: `${permit.address}, Miami-Dade County, Florida`,
+    location: `${permit.address}, Broward County, Florida`,
     surveyDate: survey.surveyDate,
     demolitionHorizon: survey.demolitionHorizon,
     plazaType: survey.plazaType,

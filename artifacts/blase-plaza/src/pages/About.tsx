@@ -5,7 +5,7 @@ export default function About() {
       
       <p className="mb-4">
         <strong>ESTABLISHED:</strong> 2026<br />
-        <strong>JURISDICTION:</strong> Miami-Dade County
+        <strong>JURISDICTION:</strong> Broward County
       </p>
 
       <hr className="my-6 border-black" />

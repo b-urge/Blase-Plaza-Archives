@@ -25,7 +25,7 @@ export default function ApiAccess() {
 
         <p className="text-sm mb-3">
           This API provides programmatic read-only access to the Blasé Plaza Archives survey
-          database. All records reflect permit data sourced from Miami-Dade County open data systems
+          database. All records reflect permit data sourced from Broward County open data systems
           and field assessments based on documentary evidence available at time of survey.
         </p>
         <p className="text-sm mb-3">
@@ -163,7 +163,7 @@ export default function ApiAccess() {
         <hr className="border-[#808080] my-4" />
 
         <p className="font-bold mb-2">NOTES</p>
-        <p className="mb-1">Data reflects Miami-Dade County permit records and is updated daily.</p>
+        <p className="mb-1">Data reflects Broward County permit records and is updated daily.</p>
         <p className="mb-1">Field assessments are documentary in nature and do not constitute official municipal records.</p>
         <p className="mb-1">All data is read-only. No write access is available via this API.</p>
       </div>

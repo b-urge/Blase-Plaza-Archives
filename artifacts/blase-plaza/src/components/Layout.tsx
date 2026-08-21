@@ -27,7 +27,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="flex items-center gap-4">
           <div>
             <h1 className="text-base md:text-xl font-bold tracking-widest leading-tight" style={{ textShadow: "1px 1px 0px #000" }}>BLASÉ PLAZA ARCHIVES</h1>
-            <p className="text-xs md:text-sm text-[#ffffaa] uppercase tracking-widest">Miami-Dade County</p>
+            <p className="text-xs md:text-sm text-[#ffffaa] uppercase tracking-widest">Broward County</p>
           </div>
         </div>
       </header>
