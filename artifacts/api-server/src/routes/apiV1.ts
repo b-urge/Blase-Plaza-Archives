@@ -1,86 +1,16 @@
-import {
-  Router,
-  type IRouter,
-  type Request,
-  type Response,
-  type NextFunction,
-} from "express";
+import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
-import { surveysTable, apiKeysTable } from "@workspace/db/schema";
+import { surveysTable } from "@workspace/db/schema";
 import { eq, and } from "drizzle-orm";
 import { logger } from "../lib/logger";
 
+/**
+ * Public read-only API. Deliberately unauthenticated: /api/surveys already
+ * serves the same records without a key, so requiring one here gated a side
+ * door while the front door stood open. Unreviewed entries are excluded from
+ * both.
+ */
 const router: IRouter = Router();
-
-function utcDayStart(): Date {
-  const now = new Date();
-  return new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
-  );
-}
-
-async function validateApiKey(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-): Promise<void> {
-  const raw = req.headers["x-bpa-api-key"];
-  const keyValue = Array.isArray(raw) ? raw[0] : raw;
-
-  if (!keyValue) {
-    res.status(401).json({
-      error: "UNAUTHORIZED",
-      message: `A valid API key is required. Request access at ${req.protocol}://${req.get("host")}/api-access`,
-    });
-    return;
-  }
-
-  const rows = await db
-    .select()
-    .from(apiKeysTable)
-    .where(eq(apiKeysTable.key, keyValue))
-    .limit(1);
-
-  if (rows.length === 0 || !rows[0].isActive) {
-    res.status(401).json({
-      error: "UNAUTHORIZED",
-      message: `A valid API key is required. Request access at ${req.protocol}://${req.get("host")}/api-access`,
-    });
-    return;
-  }
-
-  const record = rows[0];
-  const today = utcDayStart();
-  const recordDayStart = record.dayStart ? new Date(record.dayStart) : null;
-  const isNewDay =
-    !recordDayStart || recordDayStart.getTime() !== today.getTime();
-
-  const effectiveDailyCount = isNewDay ? 0 : (record.dailyCount ?? 0);
-
-  if (effectiveDailyCount >= 100) {
-    res.status(429).json({
-      error: "RATE_LIMIT_EXCEEDED",
-      message: "Daily request limit reached. Resets at midnight UTC.",
-    });
-    return;
-  }
-
-  try {
-    await db
-      .update(apiKeysTable)
-      .set({
-        lastUsedAt: new Date(),
-        requestCount: (record.requestCount ?? 0) + 1,
-        dailyCount: effectiveDailyCount + 1,
-        dayStart: isNewDay ? today : record.dayStart,
-      })
-      .where(eq(apiKeysTable.id, record.id));
-  } catch (err) {
-    logger.error({ err }, "Failed to update api key usage");
-  }
-
-  next();
-}
 
 function formatSurvey(s: typeof surveysTable.$inferSelect) {
   return {
@@ -115,7 +45,7 @@ function formatSurvey(s: typeof surveysTable.$inferSelect) {
   };
 }
 
-router.get("/v1/plazas", validateApiKey, async (req, res) => {
+router.get("/v1/plazas", async (req, res) => {
   try {
     const {
       horizon,
@@ -163,7 +93,7 @@ router.get("/v1/plazas", validateApiKey, async (req, res) => {
   }
 });
 
-router.get("/v1/plazas/:site_id", validateApiKey, async (req, res) => {
+router.get("/v1/plazas/:site_id", async (req, res) => {
   try {
     const { site_id } = req.params;
     const rows = await db
@@ -178,12 +108,10 @@ router.get("/v1/plazas/:site_id", validateApiKey, async (req, res) => {
       .limit(1);
 
     if (rows.length === 0) {
-      res
-        .status(404)
-        .json({
-          error: "NOT_FOUND",
-          message: `No record found for site_id: ${site_id}`,
-        });
+      res.status(404).json({
+        error: "NOT_FOUND",
+        message: `No record found for site_id: ${site_id}`,
+      });
       return;
     }
 

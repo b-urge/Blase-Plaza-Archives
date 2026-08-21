@@ -193,7 +193,7 @@ Entries are staged for review. Approve them at `/api/admin`.
 
 ## API
 
-Read-only public access. Requires an API key, requested at `/api-access` and sent as `x-bpa-api-key`.
+Read-only public access, unauthenticated. `/api/surveys` already served the same records without a key, so requiring one here gated a side door while the front door stood open.
 
 ```
 GET /api/v1/plazas              list records; filter by horizon, classification
