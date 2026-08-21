@@ -23,7 +23,6 @@ export default function ListView() {
   const [search, setSearch] = useState("");
   const [horizon, setHorizon] = useState<GetSurveysHorizon | "">("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [year, setYear] = useState("");
   const [sortBy, setSortBy] = useState<string>("id");
   const [sortDir, setSortDir] = useState<GetSurveysSortDir>("asc");
   const [showModal, setShowModal] = useState(false);
@@ -31,15 +30,9 @@ export default function ListView() {
   const { data: rawSurveys = [], isLoading } = useGetSurveys({
     search: search || undefined,
     horizon: horizon ? (horizon as GetSurveysHorizon) : undefined,
-    from: year ? `${year}-01-01` : undefined,
-    to: year ? `${year}-12-31` : undefined,
     sortBy,
     sortDir,
   });
-
-  // The sync window opens in 2023; offer every year from then to now.
-  const years: number[] = [];
-  for (let y = new Date().getFullYear(); y >= 2023; y--) years.push(y);
 
   const surveys = statusFilter
     ? rawSurveys.filter((s) => s.status === statusFilter)
@@ -147,21 +140,6 @@ export default function ListView() {
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Enter search term..."
           />
-        </div>
-        <div>
-          <label className="block text-xs font-bold mb-1">PERMIT YEAR:</label>
-          <select
-            className="win98-window-inset px-2 py-1 text-sm w-full md:w-auto border-2 border-[#808080] border-t-[#000] border-l-[#000]"
-            value={year}
-            onChange={(e) => setYear(e.target.value)}
-          >
-            <option value="">-- ALL YEARS --</option>
-            {years.map((y) => (
-              <option key={y} value={y}>
-                {y}
-              </option>
-            ))}
-          </select>
         </div>
         <div>
           <label className="block text-xs font-bold mb-1">
