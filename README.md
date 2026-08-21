@@ -19,6 +19,14 @@ The dashboard provides an interactive way to explore the survey. Each documented
 | Report | The full survey document for a single site |
 | API | Public read-only access, API key required |
 
+## Two Layers
+
+The dashboard automatically populates with shopping plazas identified through public data sources. These records form the starting point for the survey rather than the finished archive.
+
+As new plazas appear in the dataset, I plan to visit each site in person. Field visits are used to confirm the accuracy of the underlying information, photograph the plaza, document its present condition, identify its commercial species, and complete the project's observational assessments.
+
+This creates two layers of information: an automatically populated inventory of Broward County shopping plazas and a growing collection of sites that have been personally surveyed and documented in the field.
+
 ## Survey Methodology
 
 Each plaza is documented using the same general structure:
@@ -40,7 +48,7 @@ Each plaza is documented using the same general structure:
 | Vacancy Ratio | Observed presence of vacant storefronts |
 | Pedestrian Activity | Relative amount of pedestrian movement |
 
-**These are inferred, not measured.** No public dataset records parking entropy, shade, signage density, vacancy, or foot traffic, and the archive does not yet include on-site fieldwork. The values are inferred by a language model from the permit record, parcel attributes, and corridor context, and every report labels the section `INFERRED — NOT FIELD-VERIFIED`. They are useful for comparing sites against one another; they are not observations, and they should not be cited as measurements.
+**On unvisited sites these are inferred, not measured.** No public dataset records parking entropy, shade, signage density, vacancy, or foot traffic. Until a plaza has been surveyed in person, the values are inferred by a language model from the permit record, parcel attributes, and corridor context, and the report labels the section `INFERRED — NOT FIELD-VERIFIED`. They are useful for comparing sites against one another, but they are not observations and should not be cited as measurements. Field visits replace them with values recorded on site.
 
 ## Site Records
 
@@ -57,11 +65,11 @@ Permit Reference     permit number, type, issue date, document reference
 Data Provenance      the source of each class of field
 ```
 
-Photographs are not yet part of the record.
+Photographs are added when a site is surveyed in person.
 
-## How the data is produced
+## How the records layer is produced
 
-Every record originates from a government permit filing. Nothing is invented, and no plaza is added by hand.
+Every record enters the archive from a government permit filing — no plaza is added by hand, and nothing is invented. Field survey builds on top of what this produces.
 
 1. **Fetch** — Commercial demolition and alteration permits are pulled from the City of Fort Lauderdale permit feed. Two queries run: one for active demolition permits, one for the most recent filings. Void, withdrawn, purged, disapproved, and pre-application records are excluded.
 2. **Collapse** — Multiple permits at one address become a single site, keeping the highest archive priority. A building with an active demolition permit is never displaced by a later renovation permit at the same address.
@@ -94,8 +102,8 @@ The collection is ongoing. Sites represent documented observations rather than a
 ## Limitations
 
 - **One city, not the county.** See above. The name describes the intent; the data describes Fort Lauderdale.
-- **The metrics are inferred.** Parking entropy, shade, signage, vacancy, and pedestrian activity are model inferences from records, not site visits.
-- **No photographs.** The archive is textual.
+- **The metrics are inferred until a site is visited.** Parking entropy, shade, signage, vacancy, and pedestrian activity begin as model inferences from records. Field visits replace them with observations, so accuracy varies by layer.
+- **No photographs yet.** The records layer is textual; images arrive with field visits.
 - **Building area is parcel-level.** Square footage covers all buildings on the parcel, not the permitted work, so it can overstate a single tenant bay. Present on 33 of 48 records; the Property Appraiser does not publish it for every parcel.
 - **`EXPIRED` conflates two outcomes.** A completed demolition and a lapsed permit both land there, so a plaza recorded as Post-Intervention may be demolished or may still be standing untouched.
 - **Non-plazas can slip through.** Records whose parcel has no DOR use code are kept rather than discarded, since excluding them would lose real plazas. A few offices or mixed-use buildings are included as a result.
