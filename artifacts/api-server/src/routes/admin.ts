@@ -7,7 +7,7 @@ import {
 } from "express";
 import { db } from "@workspace/db";
 import { surveysTable } from "@workspace/db/schema";
-import { eq, and, notLike, count } from "drizzle-orm";
+import { eq, and, notLike, count, desc } from "drizzle-orm";
 import { logger } from "../lib/logger";
 import { statusForHorizon } from "./permits";
 
@@ -313,6 +313,86 @@ router.post("/admin/repair-bullets", adminAuth, async (req, res) => {
   } catch (err) {
     logger.error({ err }, "Failed to repair bullet formatting");
     res.status(500).json({ error: "Failed to repair bullet formatting" });
+  }
+});
+
+/**
+ * Renumber SITE ID to match the row id, so the number shown on a report equals
+ * the number in its URL.
+ *
+ * SITE ID used to come from a counter that restarted at 1 on an empty table
+ * while the id sequence kept climbing across rebuilds, so /report/64 displayed
+ * "SITE ID: 01". New records take their number from the id sequence; this
+ * realigns records created before that change.
+ *
+ * SITE ID also appears inside the generated report text and the document
+ * reference, so both are rewritten to match. Runs in a transaction because
+ * site_id is unique. Dry run by default; ?confirm=true writes.
+ */
+router.post("/admin/renumber-sites", adminAuth, async (req, res) => {
+  try {
+    const confirmed = req.query.confirm === "true";
+
+    const rows = await db
+      .select({
+        id: surveysTable.id,
+        siteId: surveysTable.siteId,
+        reportText: surveysTable.reportText,
+        documentRef: surveysTable.documentRef,
+      })
+      .from(surveysTable)
+      .orderBy(desc(surveysTable.id));
+
+    const stale = rows.filter(
+      (r) => r.siteId !== String(r.id).padStart(2, "0"),
+    );
+
+    if (!confirmed) {
+      res.json({
+        dryRun: true,
+        scanned: rows.length,
+        wouldRenumber: stale.length,
+        message: `Dry run: ${stale.length} of ${rows.length} record(s) have a SITE ID that does not match their URL. Re-send with ?confirm=true to renumber.`,
+        samples: stale.slice(0, 10).map((r) => ({
+          id: r.id,
+          from: r.siteId,
+          to: String(r.id).padStart(2, "0"),
+        })),
+      });
+      return;
+    }
+
+    let renumbered = 0;
+    await db.transaction(async (tx) => {
+      for (const row of stale) {
+        const next = String(row.id).padStart(2, "0");
+        const reportText = row.reportText.replace(
+          /^SITE ID:[ \t]*\S+[ \t]*$/m,
+          `SITE ID: ${next}`,
+        );
+        // Document refs look like BPA-2026-<siteId>-<4 digits>.
+        const documentRef = row.documentRef.replace(
+          /^(BPA-\d{4}-)[^-]+(-\d+)$/,
+          `$1${next}$2`,
+        );
+        await tx
+          .update(surveysTable)
+          .set({ siteId: next, reportText, documentRef })
+          .where(eq(surveysTable.id, row.id));
+        renumbered++;
+      }
+    });
+
+    logger.info({ renumbered }, "Renumbered SITE IDs to match row ids");
+    res.json({
+      success: true,
+      scanned: rows.length,
+      renumbered,
+      message: `Renumbered ${renumbered} record(s).`,
+    });
+  } catch (err) {
+    logger.error({ err }, "Failed to renumber site ids");
+    res.status(500).json({ error: "Failed to renumber site ids" });
   }
 });
 

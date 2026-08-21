@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
 import { surveysTable } from "@workspace/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { geocodeAddress } from "../services/geocoder";
 import { generateSurvey, type PermitRecord } from "../services/surveyGenerator";
 import { logger } from "../lib/logger";
@@ -652,15 +652,23 @@ const SAMPLE_PERMITS: PermitRecord[] = [
   },
 ];
 
-async function getNextSiteNum(): Promise<number> {
-  const rows = await db
-    .select({ siteId: surveysTable.siteId })
-    .from(surveysTable)
-    .orderBy(desc(surveysTable.id))
-    .limit(1);
-  if (rows.length === 0) return 1;
-  const last = parseInt(rows[0].siteId, 10);
-  return isNaN(last) ? 1 : last + 1;
+/**
+ * Reserve the row id this survey will occupy.
+ *
+ * SITE ID is embedded in the generated report text and the document reference,
+ * so it must be known before generation. Previously it was a separate counter
+ * derived from the last row's siteId, which restarts at 1 on an empty table
+ * while the id sequence keeps climbing — so /report/64 displayed "SITE ID: 01".
+ * Taking the value from the id sequence keeps the displayed number, the row id
+ * and the URL identical.
+ */
+async function reserveSiteNum(): Promise<number> {
+  const result = await db.execute(
+    sql`SELECT nextval(pg_get_serial_sequence('surveys', 'id')) AS id`,
+  );
+  const row = (result as unknown as { rows: { id: string | number }[] })
+    .rows[0];
+  return Number(row.id);
 }
 
 async function locationExists(address: string): Promise<boolean> {
@@ -675,7 +683,6 @@ async function locationExists(address: string): Promise<boolean> {
 
 async function processPermit(
   permit: PermitRecord,
-  siteNum: number,
   sourceCity: string,
   asPendingReview: boolean,
 ): Promise<boolean> {
@@ -685,6 +692,7 @@ async function processPermit(
     return false;
   }
 
+  const siteNum = await reserveSiteNum();
   const survey = await generateSurvey(permit, siteNum);
 
   // The Broward permit feed ships point geometry, so only fall back to the
@@ -697,6 +705,7 @@ async function processPermit(
   const derivedStatus = statusForHorizon(permit.horizon);
 
   await db.insert(surveysTable).values({
+    id: siteNum,
     siteId: survey.siteId,
     plazaName: survey.plazaName,
     location: `${permit.address}, Broward County, Florida`,
@@ -741,13 +750,11 @@ export async function seedIfEmpty(): Promise<void> {
   logger.info("Database is empty — running auto-seed with sample permits");
   let processed = 0;
   let errors = 0;
-  let siteNum = await getNextSiteNum();
 
   for (const permit of SAMPLE_PERMITS) {
     try {
-      const ok = await processPermit(permit, siteNum, "Sample Data", false);
+      const ok = await processPermit(permit, "Sample Data", false);
       if (ok) {
-        siteNum++;
         processed++;
       }
     } catch (err) {
@@ -763,7 +770,6 @@ router.post("/permits/sync", async (req, res) => {
   try {
     let processed = 0;
     let errors = 0;
-    let siteNum = await getNextSiteNum();
     const sourceResults: Record<string, { found: number; added: number }> = {};
 
     for (const source of CITY_SOURCES) {
@@ -784,9 +790,8 @@ router.post("/permits/sync", async (req, res) => {
 
       for (const permit of permits) {
         try {
-          const ok = await processPermit(permit, siteNum, source.name, true);
+          const ok = await processPermit(permit, source.name, true);
           if (ok) {
-            siteNum++;
             processed++;
             sourceResults[source.name].added++;
           }
@@ -809,14 +814,8 @@ router.post("/permits/sync", async (req, res) => {
       if (existing.length === 0) {
         for (const permit of SAMPLE_PERMITS) {
           try {
-            const ok = await processPermit(
-              permit,
-              siteNum,
-              "Sample Data",
-              false,
-            );
+            const ok = await processPermit(permit, "Sample Data", false);
             if (ok) {
-              siteNum++;
               processed++;
             }
           } catch (err) {
@@ -849,13 +848,11 @@ router.post("/permits/seed", async (req, res) => {
   try {
     let processed = 0;
     let errors = 0;
-    let siteNum = await getNextSiteNum();
 
     for (const permit of SAMPLE_PERMITS) {
       try {
-        const ok = await processPermit(permit, siteNum, "Sample Data", false);
+        const ok = await processPermit(permit, "Sample Data", false);
         if (ok) {
-          siteNum++;
           processed++;
         }
       } catch (err) {
