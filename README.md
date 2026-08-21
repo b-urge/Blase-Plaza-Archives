@@ -111,10 +111,9 @@ The collection is ongoing. Sites represent documented observations rather than a
 - **The metrics are inferred until a site is visited.** Parking entropy, shade, signage, vacancy, and pedestrian activity begin as model inferences from records. Field visits replace them with observations, so accuracy varies by layer.
 - **No photographs yet.** The records layer is textual; images arrive with field visits.
 - **Building area is parcel-level.** Square footage covers all buildings on the parcel, not the permitted work, so it can overstate a single tenant bay. Present on 33 of 48 records; the Property Appraiser does not publish it for every parcel.
-- **`EXPIRED` conflates two outcomes.** A completed demolition and a lapsed permit both land there, so a plaza recorded as Post-Intervention may be demolished or may still be standing untouched.
+- **`EXPIRED` conflates two outcomes.** A completed demolition and a lapsed permit both land there, so a plaza recorded as Post-Intervention may be demolished or may still be standing untouched. A site visit settles which, and separating the two will be streamlined as the field survey develops.
 - **Non-plazas can slip through.** Records whose parcel has no DOR use code are kept rather than discarded, since excluding them would lose real plazas. A few offices or mixed-use buildings are included as a result.
 - **Window starts in 2023.** Earlier filings are not synced.
-- **Reports are AI-written.** Each is generated from a real permit and parcel record and reviewed before publication, but the prose is not a human field report.
 
 ## Project Structure
 
