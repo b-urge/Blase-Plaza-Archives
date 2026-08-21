@@ -14,6 +14,7 @@ router.get("/surveys/stats", async (req, res) => {
           count: sql<number>`cast(count(*) as int)`,
         })
         .from(surveysTable)
+        .where(eq(surveysTable.pendingReview, false))
         .groupBy(surveysTable.demolitionHorizon),
       db
         .select({
@@ -21,10 +22,12 @@ router.get("/surveys/stats", async (req, res) => {
           count: sql<number>`cast(count(*) as int)`,
         })
         .from(surveysTable)
+        .where(eq(surveysTable.pendingReview, false))
         .groupBy(surveysTable.status),
       db
         .select({ lastSyncedAt: surveysTable.lastSyncedAt })
         .from(surveysTable)
+        .where(eq(surveysTable.pendingReview, false))
         .orderBy(desc(surveysTable.lastSyncedAt))
         .limit(1),
     ]);
@@ -74,18 +77,20 @@ router.get("/surveys", async (req, res) => {
 
     let query = db.select().from(surveysTable).$dynamic();
 
-    const conditions = [];
+    // Entries awaiting review are staged, not published. They are visible only
+    // through /api/admin/pending until an admin approves them.
+    const conditions = [eq(surveysTable.pendingReview, false)];
     if (horizon) {
       conditions.push(eq(surveysTable.demolitionHorizon, horizon));
     }
     if (search) {
-      conditions.push(
-        or(
-          ilike(surveysTable.plazaName, `%${search}%`),
-          ilike(surveysTable.location, `%${search}%`),
-          ilike(surveysTable.siteId, `%${search}%`),
-        ),
+      // or() is typed as possibly-undefined; only push a real condition.
+      const searchCondition = or(
+        ilike(surveysTable.plazaName, `%${search}%`),
+        ilike(surveysTable.location, `%${search}%`),
+        ilike(surveysTable.siteId, `%${search}%`),
       );
+      if (searchCondition) conditions.push(searchCondition);
     }
     if (conditions.length === 1) {
       query = query.where(conditions[0]);

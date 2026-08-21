@@ -1,4 +1,10 @@
-import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
+import {
+  Router,
+  type IRouter,
+  type Request,
+  type Response,
+  type NextFunction,
+} from "express";
 import { db } from "@workspace/db";
 import { surveysTable, apiKeysTable } from "@workspace/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -8,10 +14,16 @@ const router: IRouter = Router();
 
 function utcDayStart(): Date {
   const now = new Date();
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  return new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+  );
 }
 
-async function validateApiKey(req: Request, res: Response, next: NextFunction): Promise<void> {
+async function validateApiKey(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
   const raw = req.headers["x-bpa-api-key"];
   const keyValue = Array.isArray(raw) ? raw[0] : raw;
 
@@ -40,7 +52,8 @@ async function validateApiKey(req: Request, res: Response, next: NextFunction): 
   const record = rows[0];
   const today = utcDayStart();
   const recordDayStart = record.dayStart ? new Date(record.dayStart) : null;
-  const isNewDay = !recordDayStart || recordDayStart.getTime() !== today.getTime();
+  const isNewDay =
+    !recordDayStart || recordDayStart.getTime() !== today.getTime();
 
   const effectiveDailyCount = isNewDay ? 0 : (record.dailyCount ?? 0);
 
@@ -95,27 +108,41 @@ function formatSurvey(s: typeof surveysTable.$inferSelect) {
       issue_date: s.permitIssueDate,
       document_ref: s.documentRef,
     },
-    coordinates: s.latitude && s.longitude
-      ? { latitude: s.latitude, longitude: s.longitude }
-      : null,
+    coordinates:
+      s.latitude && s.longitude
+        ? { latitude: s.latitude, longitude: s.longitude }
+        : null,
   };
 }
 
 router.get("/v1/plazas", validateApiKey, async (req, res) => {
   try {
-    const { horizon, classification, limit: limitStr, offset: offsetStr } = req.query;
+    const {
+      horizon,
+      classification,
+      limit: limitStr,
+      offset: offsetStr,
+    } = req.query;
 
     const limit = Math.min(parseInt(limitStr as string) || 100, 100);
     const offset = parseInt(offsetStr as string) || 0;
 
-    let rows = await db.select().from(surveysTable);
+    // Unreviewed entries are not published through the public API.
+    let rows = await db
+      .select()
+      .from(surveysTable)
+      .where(eq(surveysTable.pendingReview, false));
 
     if (horizon) {
-      rows = rows.filter((r) => r.demolitionHorizon === (horizon as string).toUpperCase());
+      rows = rows.filter(
+        (r) => r.demolitionHorizon === (horizon as string).toUpperCase(),
+      );
     }
     if (classification) {
       rows = rows.filter((r) =>
-        r.plazaType.toLowerCase().includes((classification as string).toLowerCase())
+        r.plazaType
+          .toLowerCase()
+          .includes((classification as string).toLowerCase()),
       );
     }
 
@@ -130,7 +157,9 @@ router.get("/v1/plazas", validateApiKey, async (req, res) => {
     });
   } catch (err) {
     logger.error({ err }, "GET /api/v1/plazas failed");
-    res.status(500).json({ error: "INTERNAL_ERROR", message: "Internal server error" });
+    res
+      .status(500)
+      .json({ error: "INTERNAL_ERROR", message: "Internal server error" });
   }
 });
 
@@ -140,18 +169,30 @@ router.get("/v1/plazas/:site_id", validateApiKey, async (req, res) => {
     const rows = await db
       .select()
       .from(surveysTable)
-      .where(eq(surveysTable.siteId, site_id))
+      .where(
+        and(
+          eq(surveysTable.siteId, site_id),
+          eq(surveysTable.pendingReview, false),
+        ),
+      )
       .limit(1);
 
     if (rows.length === 0) {
-      res.status(404).json({ error: "NOT_FOUND", message: `No record found for site_id: ${site_id}` });
+      res
+        .status(404)
+        .json({
+          error: "NOT_FOUND",
+          message: `No record found for site_id: ${site_id}`,
+        });
       return;
     }
 
     res.json(formatSurvey(rows[0]));
   } catch (err) {
     logger.error({ err }, "GET /api/v1/plazas/:site_id failed");
-    res.status(500).json({ error: "INTERNAL_ERROR", message: "Internal server error" });
+    res
+      .status(500)
+      .json({ error: "INTERNAL_ERROR", message: "Internal server error" });
   }
 });
 
