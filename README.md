@@ -1,10 +1,12 @@
+<p align="center">
+  <img src="docs/plaza-header.jpg" width="620" alt="A single-storey Fort Lauderdale strip plaza: a Chinese takeout under a red awning, an acupuncture clinic, and a Filipino cafe sharing one roofline above a surface parking lot." />
+</p>
+
 # Blasé Plaza Archives
 
 *A field survey and digital catalog of Broward County's shopping plazas.*
 
 **[blaseplazas.com](https://blaseplazas.com)**
-
-![The archive's map view: surveyed plazas plotted across Fort Lauderdale, coloured by demolition horizon, in a deliberately 1990s county-government interface.](docs/map.png)
 
 Blasé Plaza Archives documents the ordinary shopping plazas that make up much of Broward County, Florida's commercial landscape. The project treats the shopping plaza as a subject of field study: not necessarily because a particular plaza is architecturally remarkable, but because of its repetition, adaptation, and ubiquity throughout Broward County.
 
@@ -17,6 +19,8 @@ The archive focuses on the period just before demolition or renovation, when a s
 > Treat everything here as a working document rather than an authoritative inventory of Broward County commercial property. For anything that matters, go to the source: the City of Fort Lauderdale permit records and the Broward County Property Appraiser.
 
 ## Dashboard
+
+![The map view: surveyed plazas plotted across Fort Lauderdale, coloured by demolition horizon.](docs/map.png)
 
 The dashboard provides an interactive way to explore the survey. Each documented plaza is represented as a site record containing location data, classifications, commercial observations, and comparative metrics. Users can explore individual sites or compare patterns across the larger collection.
 
