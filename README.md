@@ -8,6 +8,12 @@ Blasé Plaza Archives documents the ordinary shopping plazas that make up much o
 
 The archive focuses on the period just before demolition or renovation, when a site shows the most information — which units are vacant, how signage and infrastructure have degraded, how many tenants have turned over.
 
+> ### ⚠️ This is a hobby project, and it changes constantly
+>
+> Blasé Plaza Archives is a personal project, not an official or institutional record. Records are added, reclassified, and corrected as the survey grows and as the underlying permit data shifts. The structure, the methodology, and the interpretation are all still settling, and breaking changes happen without ceremony.
+>
+> Treat everything here as a working document rather than an authoritative inventory of Broward County commercial property. For anything that matters, go to the source: the City of Fort Lauderdale permit records and the Broward County Property Appraiser.
+
 ## Dashboard
 
 The dashboard provides an interactive way to explore the survey. Each documented plaza is represented as a site record containing location data, classifications, commercial observations, and comparative metrics. Users can explore individual sites or compare patterns across the larger collection.
