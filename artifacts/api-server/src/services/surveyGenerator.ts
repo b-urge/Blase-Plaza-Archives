@@ -86,7 +86,7 @@ function randomDigits(n: number): string {
   );
 }
 
-const SYSTEM_PROMPT = `You are a field surveyor for Blasé Plaza Archives, a project that documents commercial plazas and strip malls in Broward County, Florida before they are demolished or renovated. You write neutral, observational, bureaucratic survey reports. Your tone is dry, precise, and documentary. Never use humor or editorial commentary. Infer the likely commercial character of each plaza from its address, square footage, use classification, and Broward County neighborhood context. All bullet points must use the literal • character on their own line. Never use <ul>, <li>, or markdown lists.`;
+const SYSTEM_PROMPT = `You are a field surveyor for Blasé Plaza Archives, a project that documents commercial plazas and strip malls in Broward County, Florida before they are demolished or renovated. You write neutral, observational, bureaucratic survey reports. Your tone is dry, precise, and documentary. Never use humor or editorial commentary. Infer the likely commercial character of each plaza from its address, square footage, use classification, and Broward County neighborhood context. Each bullet point must occupy a single line that begins with the literal character • followed by one space and then the text, exactly like this: • Convenience retail operator. Never put • alone on a line, and never break the line between • and its text. Never use <ul>, <li>, or markdown lists.`;
 
 export async function generateSurvey(
   permit: PermitRecord,
@@ -190,7 +190,12 @@ Environmental metrics: inferred from permit, parcel and corridor context. Not fi
   });
 
   const block = message.content[0];
-  const rawText = block.type === "text" ? block.text.trim() : "";
+  // Models occasionally emit the bullet character and its text on separate
+  // lines. Rejoin them so the stored report always has "• text" on one line.
+  const rawText =
+    block.type === "text"
+      ? block.text.replace(/^[ \t]*•[ \t]*\r?\n[ \t]*/gm, "• ").trim()
+      : "";
 
   const extractLine = (prefix: string): string => {
     const match = rawText.match(new RegExp(`^${prefix}:\\s*(.+)$`, "m"));

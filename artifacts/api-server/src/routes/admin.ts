@@ -252,6 +252,70 @@ router.post("/admin/purge-legacy", adminAuth, async (req, res) => {
   }
 });
 
+/**
+ * Rejoin bullet characters that were stored on their own line.
+ *
+ * Earlier reports were generated under a system prompt that said bullets must
+ * use "the literal • character on their own line", which the model took
+ * literally and emitted as "•\ntext". The prompt and a generation-time
+ * normaliser now prevent this; this repairs records already in the database
+ * without regenerating them.
+ *
+ * Dry run by default; pass ?confirm=true to write.
+ */
+const BULLET_BREAK = /^[ \t]*•[ \t]*\r?\n[ \t]*/gm;
+
+router.post("/admin/repair-bullets", adminAuth, async (req, res) => {
+  try {
+    const confirmed = req.query.confirm === "true";
+
+    const rows = await db
+      .select({ id: surveysTable.id, reportText: surveysTable.reportText })
+      .from(surveysTable);
+
+    const broken = rows.filter((r) => {
+      BULLET_BREAK.lastIndex = 0;
+      return BULLET_BREAK.test(r.reportText);
+    });
+
+    if (!confirmed) {
+      res.json({
+        dryRun: true,
+        scanned: rows.length,
+        wouldRepair: broken.length,
+        message: `Dry run: ${broken.length} of ${rows.length} report(s) have a line break after the bullet character. Re-send with ?confirm=true to repair.`,
+      });
+      return;
+    }
+
+    let repaired = 0;
+    for (const row of broken) {
+      const fixed = row.reportText.replace(BULLET_BREAK, "• ");
+      if (fixed !== row.reportText) {
+        await db
+          .update(surveysTable)
+          .set({ reportText: fixed })
+          .where(eq(surveysTable.id, row.id));
+        repaired++;
+      }
+    }
+
+    logger.info(
+      { repaired, scanned: rows.length },
+      "Repaired bullet formatting",
+    );
+    res.json({
+      success: true,
+      scanned: rows.length,
+      repaired,
+      message: `Repaired ${repaired} report(s).`,
+    });
+  } catch (err) {
+    logger.error({ err }, "Failed to repair bullet formatting");
+    res.status(500).json({ error: "Failed to repair bullet formatting" });
+  }
+});
+
 router.get("/admin", async (req, res) => {
   const html = `<!DOCTYPE html>
 <html lang="en">
