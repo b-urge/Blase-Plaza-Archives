@@ -4,6 +4,8 @@
 
 **[blaseplazas.com](https://blaseplazas.com)**
 
+![The archive's map view: surveyed plazas plotted across Fort Lauderdale, coloured by demolition horizon, in a deliberately 1990s county-government interface.](docs/map.png)
+
 Blasé Plaza Archives documents the ordinary shopping plazas that make up much of Broward County, Florida's commercial landscape. The project treats the shopping plaza as a subject of field study: not necessarily because a particular plaza is architecturally remarkable, but because of its repetition, adaptation, and ubiquity throughout Broward County.
 
 The archive focuses on the period just before demolition or renovation, when a site shows the most information — which units are vacant, how signage and infrastructure have degraded, how many tenants have turned over.
