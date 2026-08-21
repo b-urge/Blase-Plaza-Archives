@@ -329,104 +329,158 @@ interface ArcGisFeature {
   geometry?: { x: number; y: number };
 }
 
+/**
+ * Archive priority when one address carries several permits. A building with an
+ * active demolition permit is the archive's most urgent subject, so it must not
+ * be displaced by a more recently submitted renovation at the same address.
+ */
+const HORIZON_PRIORITY: Record<string, number> = {
+  IMMINENT: 0,
+  "NEAR-TERM": 1,
+  PROJECTED: 2,
+  EXPIRED: 3,
+};
+
+/** Fetch one page of permits matching `where`, mapped to PermitRecords. */
+async function fetchPermitPage(
+  where: string,
+  limit: number,
+  timeoutMs = 45000,
+): Promise<PermitRecord[]> {
+  const out: PermitRecord[] = [];
+  const params = new URLSearchParams({
+    where,
+    outFields:
+      "CASEKEY,PERMITID,PERMITDESC,PERMITSTAT,SUBMITDT,APPROVEDT,FULLADDR,USECLASS,PARCELID",
+    orderByFields: "SUBMITDT DESC",
+    resultRecordCount: String(limit),
+    returnGeometry: "true",
+    outSR: "4326",
+    f: "json",
+  });
+
+  const resp = await safeFetch(`${FTL_PERMITS_QUERY}?${params}`, timeoutMs);
+  if (!resp.ok) {
+    logger.warn({ status: resp.status }, "Broward permit API returned non-OK");
+    return out;
+  }
+
+  const data = (await resp.json()) as {
+    features?: ArcGisFeature[];
+    error?: { message?: string };
+  };
+  if (data.error) {
+    logger.warn({ error: data.error }, "Broward permit API returned an error");
+    return out;
+  }
+  if (!data.features) return out;
+
+  for (const feature of data.features) {
+    const a = feature.attributes;
+    const rawAddr = String(a.FULLADDR ?? "").trim();
+    if (!rawAddr) continue;
+
+    const address = normalizeAddress(rawAddr);
+    if (!address) continue;
+
+    // "…EST-…" case keys are pre-application estimates, not permits.
+    const caseKey = String(a.CASEKEY ?? "");
+    if (caseKey.includes("EST-")) continue;
+
+    const desc = String(a.PERMITDESC ?? "");
+    const status = String(a.PERMITSTAT ?? "");
+    const useClass = a.USECLASS ? String(a.USECLASS).trim() : undefined;
+    const permitType =
+      desc === COMMERCIAL_DEMO_DESC ? "DEMOLITION" : "BUILDING";
+
+    const workDescription = [
+      desc === COMMERCIAL_DEMO_DESC
+        ? "COMMERCIAL DEMOLITION"
+        : "COMMERCIAL ALTERATION / RENOVATION",
+      useClass ? `USE CLASS: ${useClass}` : null,
+      status ? `PERMIT STATUS: ${status.toUpperCase()}` : null,
+    ]
+      .filter(Boolean)
+      .join(" — ");
+
+    out.push({
+      address: `${address}, Fort Lauderdale`,
+      permitNo: caseKey || String(a.PERMITID ?? "UNKNOWN"),
+      permitType,
+      issueDate: formatDate(
+        (a.APPROVEDT as number | null) ?? (a.SUBMITDT as number | null),
+      ),
+      workDescription,
+      useClass,
+      horizon: inferHorizon(permitType, status),
+      latitude: feature.geometry?.y,
+      longitude: feature.geometry?.x,
+      folio: String(a.PARCELID ?? "").trim() || undefined,
+    });
+  }
+  return out;
+}
+
 const CITY_SOURCES: CitySource[] = [
   {
     name: "Fort Lauderdale (Broward County ArcGIS)",
     fetch: async () => {
-      const results: PermitRecord[] = [];
+      let results: PermitRecord[] = [];
       try {
         const deadList = DEAD_STATUSES.map((s) => `'${s}'`).join(",");
-        const where = [
-          `PERMITDESC IN ('${COMMERCIAL_DEMO_DESC}','${COMMERCIAL_RENO_DESC}')`,
+        const base = [
           `PERMITSTAT NOT IN (${deadList})`,
           `PERMITSTAT IS NOT NULL`,
           `SUBMITDT >= DATE '2023-01-01'`,
         ].join(" AND ");
 
-        const params = new URLSearchParams({
-          where,
-          outFields:
-            "CASEKEY,PERMITID,PERMITDESC,PERMITSTAT,SUBMITDT,APPROVEDT,FULLADDR,USECLASS,PARCELID",
-          orderByFields: "SUBMITDT DESC",
-          resultRecordCount: "100",
-          returnGeometry: "true",
-          outSR: "4326",
-          f: "json",
-        });
+        const underwayList = [...UNDERWAY_STATUSES]
+          .map((x) => `'${x}'`)
+          .join(",");
 
-        const resp = await safeFetch(`${FTL_PERMITS_QUERY}?${params}`);
-        if (!resp.ok) {
-          logger.warn(
-            { status: resp.status },
-            "Broward permit API returned non-OK",
-          );
-          return results;
-        }
-
-        const data = (await resp.json()) as {
-          features?: ArcGisFeature[];
-          error?: { message?: string };
+        // Two queries. The recency window alone systematically misses active
+        // demolitions, which are the archive's highest-priority subject: they
+        // are few, and older than the most recent 100 submissions.
+        // Sequential, not parallel: two concurrent 100-record queries against
+        // the same ArcGIS host contend and time out. Each page is also isolated
+        // so one slow response cannot zero out the entire sync.
+        const page = async (where: string) => {
+          try {
+            return await fetchPermitPage(where, 100);
+          } catch (err) {
+            logger.warn({ err }, "Permit page fetch failed; continuing");
+            return [] as PermitRecord[];
+          }
         };
 
-        if (data.error) {
-          logger.warn(
-            { error: data.error },
-            "Broward permit API returned an error",
-          );
-          return results;
+        const activeDemolitions = await page(
+          `PERMITDESC = '${COMMERCIAL_DEMO_DESC}' AND PERMITSTAT IN (${underwayList}) AND ${base}`,
+        );
+        const recentWindow = await page(
+          `PERMITDESC IN ('${COMMERCIAL_DEMO_DESC}','${COMMERCIAL_RENO_DESC}') AND ${base}`,
+        );
+
+        logger.info(
+          {
+            activeDemolitions: activeDemolitions.length,
+            recentWindow: recentWindow.length,
+          },
+          "Fetched permit pages",
+        );
+
+        // Collapse to one record per address, keeping the highest archive
+        // priority rather than the most recently submitted permit.
+        const byAddress = new Map<string, PermitRecord>();
+        for (const r of [...activeDemolitions, ...recentWindow]) {
+          const existing = byAddress.get(r.address);
+          if (
+            !existing ||
+            HORIZON_PRIORITY[r.horizon] < HORIZON_PRIORITY[existing.horizon]
+          ) {
+            byAddress.set(r.address, r);
+          }
         }
-        if (!data.features) return results;
-
-        const seen = new Set<string>();
-
-        for (const feature of data.features) {
-          const a = feature.attributes;
-          const rawAddr = String(a.FULLADDR ?? "").trim();
-          if (!rawAddr) continue;
-
-          const address = normalizeAddress(rawAddr);
-          if (!address) continue;
-
-          // "…EST-…" case keys are pre-application estimates, not permits, and
-          // duplicate a real CAP permit at the same address.
-          const caseKey = String(a.CASEKEY ?? "");
-          if (caseKey.includes("EST-")) continue;
-
-          // Collapse unit-level duplicates within a single sync batch.
-          if (seen.has(address)) continue;
-          seen.add(address);
-
-          const desc = String(a.PERMITDESC ?? "");
-          const status = String(a.PERMITSTAT ?? "");
-          const useClass = a.USECLASS ? String(a.USECLASS).trim() : undefined;
-          const permitType =
-            desc === COMMERCIAL_DEMO_DESC ? "DEMOLITION" : "BUILDING";
-
-          const workDescription = [
-            desc === COMMERCIAL_DEMO_DESC
-              ? "COMMERCIAL DEMOLITION"
-              : "COMMERCIAL ALTERATION / RENOVATION",
-            useClass ? `USE CLASS: ${useClass}` : null,
-            status ? `PERMIT STATUS: ${status.toUpperCase()}` : null,
-          ]
-            .filter(Boolean)
-            .join(" — ");
-
-          results.push({
-            address: `${address}, Fort Lauderdale`,
-            permitNo: caseKey || String(a.PERMITID ?? "UNKNOWN"),
-            permitType,
-            issueDate: formatDate(
-              (a.APPROVEDT as number | null) ?? (a.SUBMITDT as number | null),
-            ),
-            workDescription,
-            useClass,
-            horizon: inferHorizon(permitType, status),
-            latitude: feature.geometry?.y,
-            longitude: feature.geometry?.x,
-            folio: String(a.PARCELID ?? "").trim() || undefined,
-          });
-        }
+        results = [...byAddress.values()];
 
         // Enrich from BCPA: square footage, year built and DOR use code.
         const parcels = await fetchParcels(
