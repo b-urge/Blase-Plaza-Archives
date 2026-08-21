@@ -9,6 +9,7 @@ import { db } from "@workspace/db";
 import { surveysTable } from "@workspace/db/schema";
 import { eq, and, notLike, count } from "drizzle-orm";
 import { logger } from "../lib/logger";
+import { statusForHorizon } from "./permits";
 
 const router: IRouter = Router();
 
@@ -69,14 +70,7 @@ router.post("/admin/approve/:id", adminAuth, async (req, res) => {
       return;
     }
     const survey = rows[0];
-    const realStatus =
-      survey.demolitionHorizon === "IMMINENT"
-        ? "Demolition Pending"
-        : survey.demolitionHorizon === "NEAR-TERM"
-          ? "Renovation Pending"
-          : survey.demolitionHorizon === "PROJECTED"
-            ? "Declining"
-            : "ACTIVE";
+    const realStatus = statusForHorizon(survey.demolitionHorizon);
     await db
       .update(surveysTable)
       .set({ pendingReview: false, status: realStatus, reviewedAt: new Date() })
@@ -123,14 +117,7 @@ router.post("/admin/approve-all", adminAuth, async (req, res) => {
       .where(eq(surveysTable.pendingReview, true));
     let approved = 0;
     for (const survey of pending) {
-      const realStatus =
-        survey.demolitionHorizon === "IMMINENT"
-          ? "Demolition Pending"
-          : survey.demolitionHorizon === "NEAR-TERM"
-            ? "Renovation Pending"
-            : survey.demolitionHorizon === "PROJECTED"
-              ? "Declining"
-              : "ACTIVE";
+      const realStatus = statusForHorizon(survey.demolitionHorizon);
       await db
         .update(surveysTable)
         .set({

@@ -67,6 +67,15 @@ export default function Report() {
               <strong>ARCH. STYLE:</strong> {survey.architecturalStyle}
             </p>
             <p>
+              <strong>BUILDING AREA:</strong>{" "}
+              {survey.squareFootage
+                ? `${survey.squareFootage.toLocaleString()} sq ft`
+                : "NOT PUBLISHED"}
+            </p>
+            <p>
+              <strong>ZONING:</strong> {survey.zoningCode || "NOT PUBLISHED"}
+            </p>
+            <p>
               <strong>PERMIT NO:</strong> {survey.permitNo || "N/A"}
             </p>
           </div>

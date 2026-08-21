@@ -36,7 +36,6 @@ router.get("/surveys/stats", async (req, res) => {
       EXPIRED: 0,
     };
     const byStatus: Record<string, number> = {
-      Active: 0,
       Declining: 0,
       "Renovation Pending": 0,
       "Demolition Pending": 0,

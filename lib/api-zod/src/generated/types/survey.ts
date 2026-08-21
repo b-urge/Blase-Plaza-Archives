@@ -26,6 +26,10 @@ export interface Survey {
   permitType: string;
   permitIssueDate: string;
   documentRef: string;
+  /** Building area in square feet, from the Broward County Property Appraiser. */
+  squareFootage?: number | null;
+  /** Zoning district, from the City of Fort Lauderdale zoning districts layer. */
+  zoningCode?: string | null;
   latitude?: number | null;
   longitude?: number | null;
   status: string;

@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useGetSurveys } from "@workspace/api-client-react";
-import type { GetSurveysHorizon, GetSurveysSortDir } from "@workspace/api-client-react";
+import type {
+  GetSurveysHorizon,
+  GetSurveysSortDir,
+} from "@workspace/api-client-react";
 import { Link, useLocation } from "wouter";
 
 const MODAL_TEXT = `Each catalogued structure is assigned a demolition horizon based on the status of active permits, confirmed redevelopment agreements, and field-assessed site conditions at the time of survey. Horizon classifications are not predictive in the strict sense — they reflect the documentary record as it exists, not projections of future municipal action.
@@ -28,11 +31,11 @@ export default function ListView() {
     search: search || undefined,
     horizon: horizon ? (horizon as GetSurveysHorizon) : undefined,
     sortBy,
-    sortDir
+    sortDir,
   });
 
   const surveys = statusFilter
-    ? rawSurveys.filter(s => s.status === statusFilter)
+    ? rawSurveys.filter((s) => s.status === statusFilter)
     : rawSurveys;
 
   const handleSort = (field: string) => {
@@ -52,19 +55,27 @@ export default function ListView() {
   const formatModalText = (text: string) => {
     const horizons = ["IMMINENT", "NEAR-TERM", "PROJECTED", "EXPIRED"];
     return text.split("\n").map((line, i) => {
-      const matchedHorizon = horizons.find(h => line.startsWith(h + " —"));
+      const matchedHorizon = horizons.find((h) => line.startsWith(h + " —"));
       if (matchedHorizon) {
         const rest = line.slice(matchedHorizon.length);
-        return <p key={i} className="mb-3"><strong>{matchedHorizon}</strong>{rest}</p>;
+        return (
+          <p key={i} className="mb-3">
+            <strong>{matchedHorizon}</strong>
+            {rest}
+          </p>
+        );
       }
       if (line.trim() === "") return <br key={i} />;
-      return <p key={i} className="mb-3">{line}</p>;
+      return (
+        <p key={i} className="mb-3">
+          {line}
+        </p>
+      );
     });
   };
 
   return (
     <div className="win98-window p-4 h-full flex flex-col">
-
       {showModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center"
@@ -80,7 +91,7 @@ export default function ListView() {
               fontSize: "13px",
               lineHeight: "1.7",
             }}
-            onClick={e => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => setShowModal(false)}
@@ -96,9 +107,19 @@ export default function ListView() {
                 padding: "1px 7px",
                 fontFamily: "inherit",
               }}
-            >X</button>
+            >
+              X
+            </button>
 
-            <h2 style={{ fontFamily: "Verdana, Arial, sans-serif", fontWeight: "bold", fontSize: "13px", letterSpacing: "0.05em", marginBottom: "10px" }}>
+            <h2
+              style={{
+                fontFamily: "Verdana, Arial, sans-serif",
+                fontWeight: "bold",
+                fontSize: "13px",
+                letterSpacing: "0.05em",
+                marginBottom: "10px",
+              }}
+            >
               DEMOLITION HORIZON CLASSIFICATIONS
             </h2>
             <hr style={{ borderColor: "#333", marginBottom: "16px" }} />
@@ -109,21 +130,27 @@ export default function ListView() {
 
       <div className="flex flex-col md:flex-row md:gap-6 md:items-end gap-3 mb-4 bg-[#d4d0c8] p-3 border-2 border-[#808080] border-t-[#fff] border-l-[#fff]">
         <div>
-          <label className="block text-xs font-bold mb-1">SEARCH RECORDS:</label>
+          <label className="block text-xs font-bold mb-1">
+            SEARCH RECORDS:
+          </label>
           <input
             type="text"
             className="win98-window-inset px-2 py-1 text-sm w-full md:w-64 border-2 border-[#808080] border-t-[#000] border-l-[#000]"
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={(e) => setSearch(e.target.value)}
             placeholder="Enter search term..."
           />
         </div>
         <div>
-          <label className="block text-xs font-bold mb-1">HORIZON FILTER:</label>
+          <label className="block text-xs font-bold mb-1">
+            HORIZON FILTER:
+          </label>
           <select
             className="win98-window-inset px-2 py-1 text-sm w-full md:w-auto border-2 border-[#808080] border-t-[#000] border-l-[#000]"
             value={horizon}
-            onChange={e => setHorizon(e.target.value as GetSurveysHorizon | "")}
+            onChange={(e) =>
+              setHorizon(e.target.value as GetSurveysHorizon | "")
+            }
           >
             <option value="">-- ALL HORIZONS --</option>
             <option value="IMMINENT">IMMINENT</option>
@@ -137,10 +164,9 @@ export default function ListView() {
           <select
             className="win98-window-inset px-2 py-1 text-sm w-full md:w-auto border-2 border-[#808080] border-t-[#000] border-l-[#000]"
             value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value)}
+            onChange={(e) => setStatusFilter(e.target.value)}
           >
             <option value="">-- ALL STATUSES --</option>
-            <option value="Active">Active</option>
             <option value="Declining">Declining</option>
             <option value="Renovation Pending">Renovation Pending</option>
             <option value="Demolition Pending">Demolition Pending</option>
@@ -167,11 +193,41 @@ export default function ListView() {
             <table className="win98-table">
               <thead>
                 <tr>
-                  <th className="cursor-pointer hover:bg-[#0000AA] whitespace-nowrap" onClick={() => handleSort("siteId")}>SITE ID<SortIcon field="siteId" /></th>
-                  <th className="cursor-pointer hover:bg-[#0000AA] whitespace-nowrap" onClick={() => handleSort("plazaName")}>PLAZA NAME<SortIcon field="plazaName" /></th>
-                  <th className="cursor-pointer hover:bg-[#0000AA] whitespace-nowrap" onClick={() => handleSort("location")}>LOCATION<SortIcon field="location" /></th>
-                  <th className="cursor-pointer hover:bg-[#0000AA] whitespace-nowrap" onClick={() => handleSort("surveyDate")}>SURVEY DATE<SortIcon field="surveyDate" /></th>
-                  <th className="cursor-pointer hover:bg-[#0000AA] whitespace-nowrap" onClick={() => handleSort("demolitionHorizon")}>HORIZON<SortIcon field="demolitionHorizon" /></th>
+                  <th
+                    className="cursor-pointer hover:bg-[#0000AA] whitespace-nowrap"
+                    onClick={() => handleSort("siteId")}
+                  >
+                    SITE ID
+                    <SortIcon field="siteId" />
+                  </th>
+                  <th
+                    className="cursor-pointer hover:bg-[#0000AA] whitespace-nowrap"
+                    onClick={() => handleSort("plazaName")}
+                  >
+                    PLAZA NAME
+                    <SortIcon field="plazaName" />
+                  </th>
+                  <th
+                    className="cursor-pointer hover:bg-[#0000AA] whitespace-nowrap"
+                    onClick={() => handleSort("location")}
+                  >
+                    LOCATION
+                    <SortIcon field="location" />
+                  </th>
+                  <th
+                    className="cursor-pointer hover:bg-[#0000AA] whitespace-nowrap"
+                    onClick={() => handleSort("surveyDate")}
+                  >
+                    SURVEY DATE
+                    <SortIcon field="surveyDate" />
+                  </th>
+                  <th
+                    className="cursor-pointer hover:bg-[#0000AA] whitespace-nowrap"
+                    onClick={() => handleSort("demolitionHorizon")}
+                  >
+                    HORIZON
+                    <SortIcon field="demolitionHorizon" />
+                  </th>
                   <th className="whitespace-nowrap">CLASSIFICATION</th>
                   <th className="whitespace-nowrap">STATUS</th>
                 </tr>
@@ -183,18 +239,24 @@ export default function ListView() {
                     className="cursor-pointer hover:bg-[#0000EE] hover:text-white group"
                     onClick={() => setLocation(`/report/${survey.id}`)}
                   >
-                    <td className="group-hover:text-white text-[#0000EE] underline whitespace-nowrap">{String(index + 1).padStart(2, '0')}</td>
+                    <td className="group-hover:text-white text-[#0000EE] underline whitespace-nowrap">
+                      {String(index + 1).padStart(2, "0")}
+                    </td>
                     <td>{survey.plazaName}</td>
                     <td>{survey.location}</td>
                     <td className="whitespace-nowrap">{survey.surveyDate}</td>
-                    <td className="whitespace-nowrap">{survey.demolitionHorizon}</td>
+                    <td className="whitespace-nowrap">
+                      {survey.demolitionHorizon}
+                    </td>
                     <td>{survey.plazaType}</td>
                     <td>{survey.status}</td>
                   </tr>
                 ))}
                 {surveys.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="text-center p-4">NO RECORDS FOUND</td>
+                    <td colSpan={7} className="text-center p-4">
+                      NO RECORDS FOUND
+                    </td>
                   </tr>
                 )}
               </tbody>

@@ -51,6 +51,18 @@ export const GetSurveysResponseItem = zod.object({
   permitType: zod.string(),
   permitIssueDate: zod.string(),
   documentRef: zod.string(),
+  squareFootage: zod
+    .number()
+    .nullish()
+    .describe(
+      "Building area in square feet, from the Broward County Property Appraiser.",
+    ),
+  zoningCode: zod
+    .string()
+    .nullish()
+    .describe(
+      "Zoning district, from the City of Fort Lauderdale zoning districts layer.",
+    ),
   latitude: zod.number().nullish(),
   longitude: zod.number().nullish(),
   status: zod.string(),
@@ -90,6 +102,18 @@ export const GetSurveyByIdResponse = zod.object({
   permitType: zod.string(),
   permitIssueDate: zod.string(),
   documentRef: zod.string(),
+  squareFootage: zod
+    .number()
+    .nullish()
+    .describe(
+      "Building area in square feet, from the Broward County Property Appraiser.",
+    ),
+  zoningCode: zod
+    .string()
+    .nullish()
+    .describe(
+      "Zoning district, from the City of Fort Lauderdale zoning districts layer.",
+    ),
   latitude: zod.number().nullish(),
   longitude: zod.number().nullish(),
   status: zod.string(),

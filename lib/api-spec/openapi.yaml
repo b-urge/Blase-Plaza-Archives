@@ -169,6 +169,14 @@ components:
           type: string
         documentRef:
           type: string
+        squareFootage:
+          type: integer
+          nullable: true
+          description: Building area in square feet, from the Broward County Property Appraiser.
+        zoningCode:
+          type: string
+          nullable: true
+          description: Zoning district, from the City of Fort Lauderdale zoning districts layer.
         latitude:
           type: number
           nullable: true

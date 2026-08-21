@@ -11,10 +11,19 @@ export interface PermitRecord {
   zoningCode?: string;
   /** Property use classification from the county permit feed, when published. */
   useClass?: string;
+  /** DOR use code and label from the Broward County Property Appraiser. */
+  useCode?: string;
+  useCodeLabel?: string;
+  /** Year of construction from BCPA (ACTUAL_YEAR_BUILT). */
+  yearBuilt?: number;
+  /** Plaza classification derived from the BCPA use code, when known. */
+  plazaType?: string;
+  /** BCPA folio (the permit feed's PARCELID), used to join parcel attributes. */
+  folio?: string;
   /** Point geometry from the permit feed, when published (WGS84). */
   latitude?: number;
   longitude?: number;
-  horizon: "IMMINENT" | "NEAR-TERM" | "PROJECTED";
+  horizon: "IMMINENT" | "NEAR-TERM" | "PROJECTED" | "EXPIRED";
 }
 
 export interface SurveyEntry {
@@ -37,14 +46,21 @@ export interface SurveyEntry {
   documentRef: string;
 }
 
-const PLAZA_TYPES = [
+/**
+ * Fallback plaza vocabulary, used only when BCPA publishes no use code for the
+ * parcel. Claude selects from it using the real address and permit context
+ * rather than a value being drawn at random.
+ */
+const PLAZA_TYPE_VOCAB = [
   "Subtropical Retail Cluster",
   "Arterial Strip Complex",
   "Parking-Forward Commercial Node",
   "Corner Mercantile Unit",
+  "Unclassified Commercial Structure",
 ];
 
-const ARCH_STYLES = [
+/** Claude selects from this using the real BCPA year of construction. */
+const ARCH_STYLE_VOCAB = [
   "Mediterranean Revival Strip",
   "Concrete Modernist Block",
   "Stucco Utilitarian",
@@ -52,15 +68,13 @@ const ARCH_STYLES = [
   "Generic Post-1990 Retail",
 ];
 
-const METRICS = ["Low", "Moderate", "High"];
-
-function randomFrom<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
-function randomMetric() {
-  return randomFrom(METRICS);
-}
+/**
+ * No permit or parcel source measures parking, shade, signage, vacancy or
+ * pedestrian activity. These were previously drawn with Math.random() and
+ * presented as measurements. They are now inferred by Claude from real permit,
+ * parcel and corridor context, and the report labels them as inferred.
+ */
+const UNDETERMINED = "Undetermined";
 
 function pad2(n: number): string {
   return String(n).padStart(2, "0");
@@ -80,14 +94,23 @@ export async function generateSurvey(
 ): Promise<SurveyEntry> {
   const siteId = pad2(siteNum);
   const documentRef = `BPA-2026-${siteId}-${randomDigits(4)}`;
-  const plazaType = randomFrom(PLAZA_TYPES);
-  const archStyle = randomFrom(ARCH_STYLES);
-
-  const sqft = permit.squareFootage
+  const sqftLine = permit.squareFootage
     ? `${permit.squareFootage.toLocaleString()} sq ft`
-    : "unknown square footage";
-  const zoning = permit.zoningCode ?? "unspecified zoning classification";
-  const useClass = permit.useClass ?? "unspecified use classification";
+    : "Not published by BCPA";
+  const zoningLine = permit.zoningCode ?? "Not published";
+  const yearLine = permit.yearBuilt
+    ? String(permit.yearBuilt)
+    : "Not published by BCPA";
+  const useLine = permit.useCodeLabel
+    ? `${permit.useCodeLabel} (DOR ${permit.useCode})`
+    : (permit.useClass ?? "Not published");
+
+  // Derived from the real BCPA use code when available; otherwise Claude infers.
+  const plazaType =
+    permit.plazaType ??
+    "[choose the best fit from: " + PLAZA_TYPE_VOCAB.join("; ") + "]";
+  const archStyle =
+    "[choose the best fit from: " + ARCH_STYLE_VOCAB.join("; ") + "]";
 
   const userPrompt = `Generate a survey entry for the following permit record:
 
@@ -96,17 +119,15 @@ Permit Number: ${permit.permitNo}
 Permit Type: ${permit.permitType}
 Issue Date: ${permit.issueDate}
 Work Description: ${permit.workDescription ?? "Not specified"}
-Square Footage: ${sqft}
-Zoning: ${zoning}
-Use Classification: ${useClass}
+Building Square Footage (BCPA): ${sqftLine}
+Zoning District (City of Fort Lauderdale): ${zoningLine}
+Year Built (BCPA): ${yearLine}
+Use Classification (BCPA): ${useLine}
 Demolition Horizon: ${permit.horizon}
-Plaza Type: ${plazaType}
-Architectural Style: ${archStyle}
-Parking Entropy: ${randomMetric()}
-Shade Coverage: ${randomMetric()}
-Signage Density: ${randomMetric()}
-Vacancy Ratio: ${randomMetric()}
-Pedestrian Activity: ${randomMetric()}
+
+Infer the environmental metrics from the address, corridor, use classification,
+square footage and year of construction above. They are not field-measured;
+state the most probable value for a property of this type and vintage.
 
 Output EXACTLY the following survey format, filling in all bracketed fields. Do not alter the structure. Use • characters for bullet points, never markdown lists:
 
@@ -122,7 +143,13 @@ PLAZA CLASSIFICATION
 Type: ${plazaType}
 Architectural Style: ${archStyle}
 
-ENVIRONMENTAL METRICS
+PARCEL RECORD
+Building Area: ${sqftLine}
+Zoning District: ${zoningLine}
+Year Built: ${yearLine}
+Use Classification: ${useLine}
+
+ENVIRONMENTAL METRICS (INFERRED — NOT FIELD-VERIFIED)
 Parking Entropy: [Low/Moderate/High]
 Shade Coverage: [Low/Moderate/High]
 Signage Density: [Low/Moderate/High]
@@ -147,7 +174,13 @@ PERMIT REFERENCE
 Permit No.: ${permit.permitNo}
 Permit Type: ${permit.permitType === "DEMOLITION" ? "DEMOLITION" : permit.permitType === "BUILDING" ? "REDEVELOPMENT" : "RENOVATION"}
 Issue Date: ${permit.issueDate}
-Document Ref.: ${documentRef}`;
+Document Ref.: ${documentRef}
+
+DATA PROVENANCE
+Permit record: City of Fort Lauderdale building permit data, Broward County.
+Parcel record: Broward County Property Appraiser.
+Zoning district: City of Fort Lauderdale zoning districts layer.
+Environmental metrics: inferred from permit, parcel and corridor context. Not field-verified.`;
 
   const message = await anthropic.messages.create({
     model: "claude-sonnet-4-6",
@@ -161,7 +194,10 @@ Document Ref.: ${documentRef}`;
 
   const extractLine = (prefix: string): string => {
     const match = rawText.match(new RegExp(`^${prefix}:\\s*(.+)$`, "m"));
-    return match ? match[1].trim() : "";
+    const value = match ? match[1].trim() : "";
+    // Reject an unfilled prompt placeholder, e.g. "[choose the best fit from: …]",
+    // so instruction text can never be stored as if it were survey data.
+    return value.startsWith("[") ? "" : value;
   };
 
   const plazaName =
@@ -174,13 +210,13 @@ Document Ref.: ${documentRef}`;
     location: `${permit.address}, Broward County, Florida`,
     surveyDate,
     demolitionHorizon: permit.horizon,
-    plazaType,
-    architecturalStyle: archStyle,
-    parkingEntropy: extractLine("Parking Entropy") || randomMetric(),
-    shadeCoverage: extractLine("Shade Coverage") || randomMetric(),
-    signageDensity: extractLine("Signage Density") || randomMetric(),
-    vacancyRatio: extractLine("Vacancy Ratio") || randomMetric(),
-    pedestrianActivity: extractLine("Pedestrian Activity") || randomMetric(),
+    plazaType: (permit.plazaType ?? extractLine("Type")) || UNDETERMINED,
+    architecturalStyle: extractLine("Architectural Style") || UNDETERMINED,
+    parkingEntropy: extractLine("Parking Entropy") || UNDETERMINED,
+    shadeCoverage: extractLine("Shade Coverage") || UNDETERMINED,
+    signageDensity: extractLine("Signage Density") || UNDETERMINED,
+    vacancyRatio: extractLine("Vacancy Ratio") || UNDETERMINED,
+    pedestrianActivity: extractLine("Pedestrian Activity") || UNDETERMINED,
     reportText: rawText,
     permitNo: permit.permitNo,
     permitType: permit.permitType,
