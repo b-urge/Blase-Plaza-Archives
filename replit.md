@@ -88,6 +88,23 @@ Each permit record generates a full structured survey via Claude `claude-sonnet-
   Removes pre-pivot Miami-Dade rows by matching any `location` not ending in
   "Broward County, Florida". Destructive and irreversible.
 
+## Nightly Sync
+
+`scripts/src/cron.ts` queues newly-filed permits for review. Entries land in
+`pending_review` and are never published automatically.
+
+- `pnpm --filter @workspace/scripts run sync` — one pass, then exit (Scheduled Deployment)
+- `pnpm --filter @workspace/scripts run cron` — loops daily at `CRON_HOUR` (always-on worker)
+
+Requires `API_BASE_URL` (the public URL, not localhost) and `ADMIN_PASSWORD`.
+Rotating `ADMIN_PASSWORD` breaks this job until the secret is updated; it
+reports that explicitly rather than failing silently.
+
+The hosting proxy cuts off long sync requests before the server finishes, so a
+timed-out request does not mean a failed sync. The job measures progress by the
+review-queue count and runs up to `SYNC_MAX_PASSES` (default 4) passes, stopping
+as soon as a pass adds nothing.
+
 ## First-Run Setup
 
 Click the "[ INITIALIZE DATABASE RECORDS ]" button on the home page to generate AI surveys for all 6 sample locations. This calls Claude API for each address.
