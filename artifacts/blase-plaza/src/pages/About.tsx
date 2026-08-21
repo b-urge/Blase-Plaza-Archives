@@ -41,9 +41,11 @@ export default function About() {
       <p className="mb-4">
         <strong>Horizon</strong>
         <br />
-        What surrounds the plaza and defines its visual boundary beyond the site
-        itself—from highways and residential neighborhoods to vegetation,
-        high-rises, and neighboring commercial development.
+        How near a plaza is to demolition or major renovation, taken from the
+        status of its building permits rather than from prediction. IMMINENT
+        marks an issued, active demolition permit; NEAR-TERM an issued
+        renovation permit; PROJECTED a permit still in plan review; and EXPIRED
+        a permit whose work has been completed or has lapsed.
       </p>
 
       <p className="mb-4">
