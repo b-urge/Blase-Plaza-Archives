@@ -74,18 +74,16 @@ Each plaza is documented using the same general structure:
 
 ## Site Records
 
-A record contains:
-
-```
-Site ID · Plaza Name · Location · Coordinates · Survey Date
-Horizon · Status · Classification · Architectural Style
-Parcel Record        building area, zoning district, year built, use classification
-Metrical Assessment  five inferred indicators
-Commercial Species   dominant and secondary
-Field Notes          one descriptive paragraph
-Permit Reference     permit number, type, issue date, document reference
-Data Provenance      the source of each class of field
-```
+| Section | Contents |
+| --- | --- |
+| Identification | Site ID, plaza name, location, coordinates, survey date |
+| Classification | Horizon, status, classification, architectural style |
+| Parcel Record | Building area, zoning district, year built, use classification |
+| Metrical Assessment | The five inferred indicators |
+| Commercial Species | Dominant and secondary |
+| Field Notes | One descriptive paragraph |
+| Permit Reference | Permit number, type, issue date, document reference |
+| Data Provenance | The source of each class of field |
 
 Photographs are added when a site is surveyed in person.
 
