@@ -1,0 +1,39 @@
+name: Nightly permit sync
+
+# Queues newly-filed Broward County commercial demolition and renovation
+# permits for review. Entries land in `pending_review` and are never published
+# automatically — approving them at /api/admin stays a manual step.
+on:
+  schedule:
+    # 06:00 UTC ≈ 02:00 in Fort Lauderdale. GitHub cron is UTC only, so this
+    # shifts by an hour across daylight saving. Immaterial for a nightly job.
+    - cron: "0 6 * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: permit-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Run sync
+        env:
+          API_BASE_URL: ${{ vars.API_BASE_URL || 'https://blaseplazas.com' }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+        run: pnpm --filter @workspace/scripts run sync
