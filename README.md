@@ -33,6 +33,16 @@ As new plazas appear in the dataset, I plan to visit each site in person. Field 
 
 This creates two layers of information: an automatically populated inventory of Broward County shopping plazas and a growing collection of sites that have been personally surveyed and documented in the field.
 
+## Machine First, Person Second
+
+Every plaza enters the archive as a machine-written record. Permit and parcel data are pulled from public sources, and Claude drafts the survey from them: the classification, the likely commercial species, the field notes, the comparative metrics. That first pass is fast, consistent, and produced entirely without anyone standing on the asphalt.
+
+It is also, necessarily, an informed reconstruction. A model reading a 3,566 square foot building from 1960, zoned B-1, on a stretch of Federal Highway can infer a great deal about what that building probably is. It cannot tell you that half the units are papered over, that the sign still carries a business that closed in 2019, or that the parking lot has quietly become overflow for the church next door.
+
+That is what the site visit is for. Visiting a plaza turns a plausible record into a documented one — confirming or correcting what the permit data implied, photographing the site, counting the vacancies, and recording the commercial species actually present rather than the ones predicted.
+
+The automation exists to make the survey possible at all: one person cannot find every at-risk plaza in Broward County by driving around and hoping. The fieldwork exists to make it true. Neither half is sufficient alone, and the archive is explicit about which stage a given record is in — until a site has been visited, its report labels the metrics `INFERRED — NOT FIELD-VERIFIED` and carries a provenance block naming the source of every field.
+
 ## Survey Methodology
 
 Each plaza is documented using the same general structure:
@@ -112,6 +122,7 @@ The collection is ongoing. Sites represent documented observations rather than a
 - **No photographs yet.** The records layer is textual; images arrive with field visits.
 - **Building area is parcel-level.** Square footage covers all buildings on the parcel, not the permitted work, so it can overstate a single tenant bay. Present on 33 of 48 records; the Property Appraiser does not publish it for every parcel.
 - **`EXPIRED` conflates two outcomes.** A completed demolition and a lapsed permit both land there, so a plaza recorded as Post-Intervention may be demolished or may still be standing untouched. A site visit settles which, and separating the two will be streamlined as the field survey develops.
+- **Unvisited records are machine-written.** Reports are drafted by a language model from permit and parcel data and reviewed before publication, but a record that has not been visited is an informed reconstruction rather than an observation. See [Machine First, Person Second](#machine-first-person-second).
 - **Non-plazas can slip through.** Records whose parcel has no DOR use code are kept rather than discarded, since excluding them would lose real plazas. A few offices or mixed-use buildings are included as a result.
 - **Window starts in 2023.** Earlier filings are not synced.
 
