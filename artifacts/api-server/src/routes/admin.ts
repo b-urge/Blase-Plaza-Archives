@@ -178,29 +178,45 @@ router.get("/admin/legacy", adminAuth, async (req, res) => {
 });
 
 /**
- * Delete legacy (pre-pivot, non-Broward) surveys.
+ * Delete surveys.
  *
- * Dry run by default — pass ?confirm=true to actually delete. This is
- * destructive and irreversible, so the default is deliberately a no-op.
+ * ?scope=legacy (default) removes pre-pivot, non-Broward records.
+ * ?scope=all removes every record — used to rebuild the archive after a
+ * change to the classification logic, since the sync skips addresses that
+ * already exist and therefore cannot correct an existing entry.
+ *
+ * Dry run by default; pass ?confirm=true to actually delete. Destructive and
+ * irreversible, so both the scope and the confirmation are explicit opt-ins.
  */
 router.post("/admin/purge-legacy", adminAuth, async (req, res) => {
   try {
     const confirmed = req.query.confirm === "true";
+    const scopeAll = req.query.scope === "all";
+    const filter = scopeAll ? undefined : legacyFilter();
 
-    const doomed = await db
-      .select({
-        id: surveysTable.id,
-        plazaName: surveysTable.plazaName,
-        location: surveysTable.location,
-      })
-      .from(surveysTable)
-      .where(legacyFilter());
+    const doomed = await (filter
+      ? db
+          .select({
+            id: surveysTable.id,
+            plazaName: surveysTable.plazaName,
+            location: surveysTable.location,
+          })
+          .from(surveysTable)
+          .where(filter)
+      : db
+          .select({
+            id: surveysTable.id,
+            plazaName: surveysTable.plazaName,
+            location: surveysTable.location,
+          })
+          .from(surveysTable));
 
     if (!confirmed) {
       res.json({
         dryRun: true,
+        scope: scopeAll ? "all" : "legacy",
         wouldDelete: doomed.length,
-        message: `Dry run: ${doomed.length} legacy survey(s) would be deleted. Re-send with ?confirm=true to proceed.`,
+        message: `Dry run: ${doomed.length} ${scopeAll ? "" : "legacy "}survey(s) would be deleted. Re-send with ?confirm=true to proceed.`,
         samples: doomed.slice(0, 10),
       });
       return;
@@ -210,21 +226,25 @@ router.post("/admin/purge-legacy", adminAuth, async (req, res) => {
       res.json({
         success: true,
         deleted: 0,
-        message: "No legacy surveys found. Nothing to delete.",
+        message: "No matching surveys found. Nothing to delete.",
       });
       return;
     }
 
-    await db.delete(surveysTable).where(legacyFilter());
+    if (filter) {
+      await db.delete(surveysTable).where(filter);
+    } else {
+      await db.delete(surveysTable);
+    }
     logger.warn(
-      { deleted: doomed.length },
-      "Purged legacy non-Broward surveys",
+      { deleted: doomed.length, scope: scopeAll ? "all" : "legacy" },
+      "Purged surveys",
     );
 
     res.json({
       success: true,
       deleted: doomed.length,
-      message: `Deleted ${doomed.length} legacy survey(s). Run POST /api/permits/sync to repopulate from Broward County permit data.`,
+      message: `Deleted ${doomed.length} ${scopeAll ? "" : "legacy "}survey(s). Run POST /api/permits/sync to repopulate from Broward County permit data.`,
     });
   } catch (err) {
     logger.error({ err }, "Failed to purge legacy surveys");
