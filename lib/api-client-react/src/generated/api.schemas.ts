@@ -78,6 +78,14 @@ export interface ErrorResponse {
 export type GetSurveysParams = {
   horizon?: GetSurveysHorizon;
   search?: string;
+  /**
+   * Only records whose permit date is on or after this date.
+   */
+  from?: string;
+  /**
+   * Only records whose permit date is on or before this date.
+   */
+  to?: string;
   sortBy?: string;
   sortDir?: GetSurveysSortDir;
 };

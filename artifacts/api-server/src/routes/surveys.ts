@@ -68,11 +68,13 @@ router.get("/surveys/stats", async (req, res) => {
 
 router.get("/surveys", async (req, res) => {
   try {
-    const { horizon, search, sortBy, sortDir } = req.query as {
+    const { horizon, search, sortBy, sortDir, from, to } = req.query as {
       horizon?: string;
       search?: string;
       sortBy?: string;
       sortDir?: string;
+      from?: string;
+      to?: string;
     };
 
     let query = db.select().from(surveysTable).$dynamic();
@@ -80,6 +82,17 @@ router.get("/surveys", async (req, res) => {
     // Entries awaiting review are staged, not published. They are visible only
     // through /api/admin/pending until an admin approves them.
     const conditions = [eq(surveysTable.pendingReview, false)];
+
+    // Permit date, falling back to parsing the display string for records
+    // created before permit_date existed. Matches the sort expression below.
+    const permitDay = sql`COALESCE(${surveysTable.permitDate}::date, CASE WHEN ${surveysTable.surveyDate} ~ '^[A-Za-z]+ [0-9]{4}$' THEN to_date(${surveysTable.surveyDate}, 'Month YYYY') END)`;
+
+    if (from && /^\d{4}-\d{2}-\d{2}$/.test(from)) {
+      conditions.push(sql`${permitDay} >= ${from}::date`);
+    }
+    if (to && /^\d{4}-\d{2}-\d{2}$/.test(to)) {
+      conditions.push(sql`${permitDay} <= ${to}::date`);
+    }
     if (horizon) {
       conditions.push(eq(surveysTable.demolitionHorizon, horizon));
     }

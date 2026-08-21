@@ -23,6 +23,14 @@ export const GetSurveysQueryParams = zod.object({
     .enum(["IMMINENT", "NEAR-TERM", "PROJECTED", "EXPIRED"])
     .optional(),
   search: zod.coerce.string().optional(),
+  from: zod
+    .date()
+    .optional()
+    .describe("Only records whose permit date is on or after this date."),
+  to: zod
+    .date()
+    .optional()
+    .describe("Only records whose permit date is on or before this date."),
   sortBy: zod.coerce.string().optional(),
   sortDir: zod.enum(["asc", "desc"]).optional(),
 });

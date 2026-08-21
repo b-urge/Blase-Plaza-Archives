@@ -203,6 +203,8 @@ Read-only public access, unauthenticated. `/api/surveys` already served the same
 
 ```
 GET /api/v1/plazas              list records; filter by horizon, classification
+GET /api/surveys                list records; filter by horizon, search, and
+                                permit date range (from / to, YYYY-MM-DD)
 GET /api/v1/plazas/{site_id}    a single record
 ```
 

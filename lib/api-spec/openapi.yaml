@@ -42,6 +42,18 @@ paths:
           in: query
           schema:
             type: string
+        - name: from
+          in: query
+          description: Only records whose permit date is on or after this date.
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          description: Only records whose permit date is on or before this date.
+          schema:
+            type: string
+            format: date
         - name: sortBy
           in: query
           schema:

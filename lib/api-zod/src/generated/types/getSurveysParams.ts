@@ -11,6 +11,14 @@ import type { GetSurveysSortDir } from "./getSurveysSortDir";
 export type GetSurveysParams = {
   horizon?: GetSurveysHorizon;
   search?: string;
+  /**
+   * Only records whose permit date is on or after this date.
+   */
+  from?: Date;
+  /**
+   * Only records whose permit date is on or before this date.
+   */
+  to?: Date;
   sortBy?: string;
   sortDir?: GetSurveysSortDir;
 };
